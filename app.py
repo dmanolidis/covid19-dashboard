@@ -6,6 +6,11 @@ import pandas as pd
 from dash.dependencies import Input, Output
 import dash_bootstrap_components as dbc
 import numpy as np
+import os
+from sqlalchemy import create_engine
+
+DATABASE_URL = os.environ['DATABASE_URL']
+engine = create_engine(DATABASE_URL, connect_args={'sslmode':'require'})
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -23,7 +28,7 @@ def transform_export_countries_df(raw):
 	final_df = pd.pivot_table(raw_df, columns=["country"])
 	final_df = final_df.reset_index()
 	final_df = final_df.rename(columns={"index": "date"})
-	final_df.date = pd.to_datetime(final_df.date)
+	final_df["date"] = pd.to_datetime(final_df["date"].apply(str))
 	final_df = final_df.sort_values("date").reset_index(drop=True)
 
 	return final_df
@@ -181,11 +186,11 @@ def predict_country(country, country_df):
 
 
 # Confirmed cases
-conf_raw = pd.read_csv("conf_ts.csv", index_col=0)
+conf_raw = pd.read_sql_table('confirmed', engine, index_col=0)
 confirmed = transform_export_countries_df(conf_raw)
 
 # Deaths
-death_raw = pd.read_csv("death_ts.csv", index_col=0)
+death_raw = pd.read_sql_table('deaths', engine, index_col=0)
 deaths = transform_export_countries_df(death_raw)
 
 # Totals
