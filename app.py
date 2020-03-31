@@ -300,270 +300,237 @@ graph2_new_total = graph_totals_tab(new_total_deaths, True, "graph12_new",
 
 
 app.layout = html.Div([
-						html.Div(
-							[html.H5("COVID-19 Dashboard")],
-							style={'textAlign': 'center'}
-							),
-						
-						dcc.Tabs([
-							dcc.Tab(label='Total Overview', 
-									children=[
-											html.Div([
-													html.Div([
-															html.H6("Total Confirmed Cases"),
-															html.H1(world_total_confirmed)],
-															style={'textAlign': 'center'},														
-															className="pretty_container",
-															),
-													
-													html.Div([html.H6("Confirmed Cases",
-																style={'textAlign': 'center', 
-																		'margin-top': '-1rem',
-																		'margin-bottom': '0.2rem'}),
-															table_confirmed],
-															className="pretty_container",
-															)		
-													], className="three columns"),
-											
-											html.Div([
-													html.Div([
-															html.H6("Total Deaths"),
-															html.H1(world_total_deaths)],
-															style={'textAlign': 'center'},
-															className="pretty_container",
-															),
-													
-													html.Div([
-															html.H6("Deaths",
-																style={'textAlign': 'center', 
-																		'margin-top': '-1rem',
-																		'margin-bottom': '0.2rem'}),
-															table_deaths],
-															className="pretty_container",
-															)	
-													], className="three columns"),
-													
-											html.Div([
-													html.Div([
-															dcc.Tabs([
-																	dcc.Tab(label='Linear', 
-																		children=[
-																			graph1_total]),
-																	dcc.Tab(label='Log', 
-																		children=[
-																			graph1_log_total]),
-																	dcc.Tab(label='New Cases', 
-																		children=[
-																			graph1_new_total])
-																	], style={'fontSize': 12,
-																				'font-family': "Arial",
-																				'fontWeight': 'bold',
-																				'height':'3.5vh',
-																				'padding': '10px',
-																				'line-height': '0.0001em'}
-																	)
-															], className="pretty_container"),
-															
-													html.Div([
-															dcc.Tabs([
-																	dcc.Tab(label='Linear', 
-																		children=[
-																			graph2_total]),
-																	dcc.Tab(label='Log', 
-																		children=[
-																			graph2_log_total]),
-																	dcc.Tab(label='New Deaths', 
-																		children=[
-																			graph2_new_total])
-																	], style={'fontSize': 12,
-																				'font-family': "Arial",
-																				'fontWeight': 'bold',
-																				'height':'3.5vh',
-																				'padding': '10px',
-																				'line-height': '0.0001em'}
-																	)
-															], className="pretty_container"),
-															
-													], className="six columns", style={'width': '54%'}),
-
-											dcc.Markdown("""
-    											[Data by John Hopkins CSSE](https://github.com/CSSEGISandData/COVID-19) | \
-    											[Code](https://github.com/dmanolidis/covid19-dashboard) \
-    											| Developed by Dimitris Manolidis
-    											""", style={'textAlign': 'center',
-															'margin-left': '30%',
-															'margin-right': '30%'})
+				html.Div(
+					[html.H5("COVID-19 Dashboard")],
+					style={'textAlign': 'center'}
+					),
+				
+				dcc.Tabs([
+					dcc.Tab(label='Total Overview', 
+						children=[
+							html.Div([
+								html.Div([
+									html.H6("Total Confirmed Cases"),
+									html.H1(world_total_confirmed)],
+									style={'textAlign': 'center'},														
+									className="pretty_container",
+									),
+								
+								html.Div(
+									[html.H6("Confirmed Cases",
+											style={'textAlign': 'center', 
+													'margin-top': '-1rem',
+													'margin-bottom': '0.2rem'}),
+									table_confirmed
+									], className="pretty_container",
+									)		
+								], className="three columns"),
+							
+								html.Div([
+									html.Div([
+										html.H6("Total Deaths"),
+										html.H1(world_total_deaths)],
+										style={'textAlign': 'center'},
+										className="pretty_container",
+										),
 									
-									], className="pretty_container"),
-							
-							dcc.Tab(label='Country Overview', 
-									children=[
-												
-										html.Div([
-
-												html.Div([
-														dcc.Dropdown(
-															id='country_sel',
-															options=[{'label': i, 'value': i} for i in confirmed_more_1.columns[1:]],
-															value='Italy'
-															)
-														],
-														style={'width': '25%', 'display': 'inline-block',
-														'margin-left': '1.2%', 'margin-right': '1.1%'}
-														),
-												]),
-							
-										dcc.Graph(id='graph1_country',
-												className="pretty_container",
-												style={'width': '46.5%', 'display': 'inline-block', 'height': '35vh',
-														'margin-left': '1.2%'}),
+									html.Div([
+										html.H6("Deaths",
+											style={'textAlign': 'center', 
+													'margin-top': '-1rem',
+													'margin-bottom': '0.2rem'}),
+										table_deaths
+										], className="pretty_container",
+										)	
+									], className="three columns"),
 										
-										dcc.Graph(id='graph2_country',
-												className="pretty_container",
-												style={'width': '46.5%', 'display': 'inline-block', 'height': '35vh',
-														'margin-right': '0.0%'}),
-										
-										dcc.Graph(id='graph3_country',
-												className="pretty_container",
-												style={'width': '46.5%', 'display': 'inline-block', 'height': '35vh',
-														'margin-left': '1.2%'}),
-										
-										dcc.Graph(id='graph4_country',
-												className="pretty_container",
-												style={'width': '46.5%', 'display': 'inline-block', 'height': '35vh',
-														'margin-right': '0.0%'}),
+								html.Div([
+									html.Div([
+										dcc.Tabs([
+											dcc.Tab(label='Linear', 
+												children=[
+													graph1_total]),
+											dcc.Tab(label='Log', 
+												children=[
+													graph1_log_total]),
+											dcc.Tab(label='New Cases', 
+												children=[
+													graph1_new_total])
+											], style={'fontSize': 12,
+														'font-family': "Arial",
+														'fontWeight': 'bold',
+														'height':'3.5vh',
+														'padding': '10px',
+														'line-height': '0.0001em'}
+												)
+										], className="pretty_container"),
+											
+									html.Div([
+										dcc.Tabs([
+											dcc.Tab(label='Linear', 
+												children=[
+													graph2_total]),
+											dcc.Tab(label='Log', 
+												children=[
+													graph2_log_total]),
+											dcc.Tab(label='New Deaths', 
+												children=[
+													graph2_new_total])
+											], style={'fontSize': 12,
+														'font-family': "Arial",
+														'fontWeight': 'bold',
+														'height':'3.5vh',
+														'padding': '10px',
+														'line-height': '0.0001em'}
+												)
+										], className="pretty_container"),
+											
+									], className="six columns",
+										style={'flex': 'row'}),
 
-										html.Div([
-												html.P("This tab shows an overview of the confirmed \
-													cases and deaths of the selected country. Only countries \
-													with at least one confirmed case and one death are shown.")],
-															
-													style={'textAlign': 'center',
-															'margin-left': '30%',
-															'margin-right': '30%'},														
-												),
-
-										dcc.Markdown("""
-    											[Data by John Hopkins CSSE](https://github.com/CSSEGISandData/COVID-19) | \
-    											[Code](https://github.com/dmanolidis/covid19-dashboard) \
-    											| Developed by Dimitris Manolidis
-    											""", style={'textAlign': 'center',
-															'margin-left': '30%',
-															'margin-right': '30%'})
+						], className="pretty_container"),
+					
+					dcc.Tab(label='Country Overview', 
+						children=[
+							html.Div([
+								html.Div([
+									dcc.Dropdown(
+										id='country_sel',
+										options=[{'label': i, 'value': i} for i in confirmed_more_1.columns[1:]],
+										value='Italy'
+										)
+									],
+									style={'width': '25%', 'display': 'inline-block',
+											'margin-left': "0.5%"}
+									),
+				
+								html.Div([
+									dcc.Graph(id='graph1_country',
+										className="pretty_container",
+										style={'width': '47.5%', 'height': '35vh'}),
 								
-								], className="pretty_container"),
-							
-							dcc.Tab(label='Country Prediction', 
-									children=[
-												
-										html.Div([
+									dcc.Graph(id='graph2_country',
+										className="pretty_container",
+										style={'width': '47.5%', 'height': '35vh'}),
+									], className="row flex-display"),
 
-												html.Div([
-														dcc.Dropdown(
-															id='country_sel_prediction',
-															options=[{'label': i, 'value': i} for i in confirmed_more_100.columns[1:]],
-															value='Italy'
-															)
-														],
-														style={'width': '25%', 'display': 'inline-block',
-														'margin-left': '1.2%', 'margin-right': '1.1%'}
-														)
-
-												]),
-							
-										dcc.Graph(id='graph1_country_prediction',
-												className="pretty_container",
-												style={'margin-left': '1.2%', 'height': '75vh'}),
-										
-										html.Div([
-												html.P("This tab shows a prediction for the confirmed \
-													cases of the selected country. The prediction starts on the first day \
-													the selected country had more than 100 total cases. The prediction \
-													is based on the logistic model.")],
-															
-													style={'textAlign': 'center',
-															'margin-left': '30%',
-															'margin-right': '30%'},														
-												),
-
-										dcc.Markdown("""
-    											[Data by John Hopkins CSSE](https://github.com/CSSEGISandData/COVID-19) | \
-    											[Code](https://github.com/dmanolidis/covid19-dashboard) \
-    											| Developed by Dimitris Manolidis
-    											""", style={'textAlign': 'center',
-															'margin-left': '30%',
-															'margin-right': '30%'})
-
-								], className="pretty_container"),
-							
-
-							dcc.Tab(label='Country Comparison', 
-									children=[
-										
-										html.Div([
-
-												html.Div([
-														dcc.Dropdown(
-															id='country1',
-															options=[{'label': i, 'value': i} for i in confirmed_more_100.columns[1:]],
-															value='Italy'
-															)
-														],
-														style={'width': '25%', 'display': 'inline-block',
-														'margin-left': '1.2%'}),
+								html.Div([
+									dcc.Graph(id='graph3_country',
+										className="pretty_container",
+										style={'width': '47.5%', 'height': '35vh'}),
 								
-												html.Div([
-														dcc.Dropdown(
-															id='country2',
-															options=[{'label': i, 'value': i} for i in confirmed_more_100.columns[1:]],
-															value='Spain'
-														)
-														],
-														style={'width': '25%', 'display': 'inline-block'})
-							
-												]),
-							
-										dcc.Graph(id='graph1_comparison',
-												className="pretty_container",
-												style={'width': '46.5%', 'display': 'inline-block', 'height': '75vh',
-														'margin-left': '1.2%'}),
-										
-										dcc.Graph(id='graph2_comparison',
-												className="pretty_container",
-												style={'width': '46.5%', 'display': 'inline-block', 'height': '75vh'}),
-										
-										html.Div([
-												html.P("This tab can be used to compare the data of the two selected \
-													countries. The plots are aligned on the first day the countries \
-													had more than 100 cases and the first day they had their first \
-													death, respectively. Only countries with more than 100 cases and \
-													at least one death are shown.")],
-															
-													style={'textAlign': 'center',
-															'margin-left': '30%',
-															'margin-right': '30%'},														
-												),
+									dcc.Graph(id='graph4_country',
+										className="pretty_container",
+										style={'width': '47.5%', 'height': '35vh'}),
+									
+									], className="row flex-display")
 
-										dcc.Markdown("""
-    											[Data by John Hopkins CSSE](https://github.com/CSSEGISandData/COVID-19) | \
-    											[Code](https://github.com/dmanolidis/covid19-dashboard) \
-    											| Developed by Dimitris Manolidis
-    											""", style={'textAlign': 'center',
-															'margin-left': '30%',
-															'margin-right': '30%'})
+								]),
 
-									], className="pretty_container")
+							html.Div([
+								html.P("This tab shows an overview of the confirmed \
+									cases and deaths of the selected country. Only countries \
+									with at least one confirmed case and one death are shown.")],
+											
+									style={'textAlign': 'center',
+											'margin-left': '30%',
+											'margin-right': '30%'},														
+								),
+
+							], className="pretty_container"),
+					
+					dcc.Tab(label='Country Prediction', 
+						children=[		
+							html.Div([
+								html.Div([
+									dcc.Dropdown(
+										id='country_sel_prediction',
+										options=[{'label': i, 'value': i} for i in confirmed_more_100.columns[1:]],
+										value='Italy'
+										)
+									],
+									style={'width': '25%', 'display': 'inline-block',
+											'margin-left': "0.5%"}
+									)
+								]),
+				
+							dcc.Graph(id='graph1_country_prediction',
+									className="pretty_container",
+									style={'height': '75vh'}),
 							
-							],
-							style={'fontSize': 14,
-								'font-family': "Arial",
-								'fontWeight': 'bold',
-								'height':'7.5vh',
-								'line-height': '0.5em',
-								'margin-left': '0.5%',
-								'margin-right': '0.8%'}
+							html.Div([
+								html.P("This tab shows a prediction for the confirmed \
+									cases of the selected country. The prediction starts on the first day \
+									the selected country had more than 100 total cases. The prediction \
+									is based on the logistic model.")],
+											
+									style={'textAlign': 'center',
+											'margin-left': '30%',
+											'margin-right': '30%'},
+									),
+
+							], className="pretty_container"),
+					
+
+					dcc.Tab(label='Country Comparison', 
+						children=[
+							html.Div([
+								html.Div([
+									dcc.Dropdown(
+										id='country1',
+										options=[{'label': i, 'value': i} for i in confirmed_more_100.columns[1:]],
+										value='Italy'
+										)
+									], style={'width': '25%', 'display': 'inline-block',
+											'margin-left': "0.5%"}),
+				
+								html.Div([
+									dcc.Dropdown(
+										id='country2',
+										options=[{'label': i, 'value': i} for i in confirmed_more_100.columns[1:]],
+										value='Spain'
+									)
+									], style={'width': '25%', 'display': 'inline-block'})
+								]),
 							
-						)
+							html.Div([
+								dcc.Graph(id='graph1_comparison',
+									className="pretty_container",
+									style={'width': '47.5%', 'height': '75vh'}),
+							
+								dcc.Graph(id='graph2_comparison',
+									className="pretty_container",
+									style={'width': '47.5%', 'height': '75vh'})
+								
+								], className="row flex-display"),
+							
+							html.Div([
+								html.P("This tab can be used to compare the data of the two selected \
+									countries. The plots are aligned on the first day the countries \
+									had more than 100 cases and the first day they had their first \
+									death, respectively. Only countries with more than 100 cases and \
+									at least one death are shown.")
+									], style={'textAlign': 'center',
+											'margin-left': '30%',
+											'margin-right': '30%'},														
+									),
+
+						], className="pretty_container")
+					
+					], style={'fontSize': 16,
+						'font-family': "Arial",
+						'fontWeight': 'bold'}					
+					),
+				
+				html.Div([
+					dcc.Markdown("""
+					[Data by John Hopkins CSSE](https://github.com/CSSEGISandData/COVID-19) | \
+					[Code](https://github.com/dmanolidis/covid19-dashboard) \
+					| Developed by Dimitris Manolidis
+					""", style={'textAlign': 'center',
+								'margin-left': '30%',
+								'margin-right': '30%'})
+					])
 				])
 
 

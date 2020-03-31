@@ -1,20 +1,13 @@
-.js-plotly-plot .plotly .modebar {
-  padding-top: 0.5%;
-  margin-right: 0.5%;
-}
-
 body {
   background-color: #f2f2f2;
   margin: 1%;
 }
 
-.two.columns {
-  width: 16.25%;
-}
 
 .column,
 .columns {
-  margin-left: 0.5%;
+  margin-left: 0.0%;
+  margin-right: 0.0%;
 }
 
 .pretty_container {
@@ -31,25 +24,6 @@ body {
   padding: 0 0 0 0;
 }
 
-.dcc_control {
-  margin: 0;
-  padding: 5px;
-  width: calc(100%-40px);
-}
-
-.control_label {
-  margin: 0;
-  padding: 10px;
-  padding-bottom: 0px;
-  margin-bottom: 0px;
-  width: calc(100%-40px);
-}
-
-.rc-slider {
-  margin-left: 0px;
-  padding-left: 0px;
-}
-
 .flex-display {
   display: flex;
 }
@@ -58,22 +32,6 @@ body {
   display: flex;
 }
 
-#individual_graph,
-#aggregate_graph {
-  width: calc(100% - 30px);
-  position: absolute;
-}
-
-#count_graph {
-  position: absolute;
-  height: calc(100% - 30px);
-  width: calc(100% - 30px);
-}
-
-#countGraphContainer {
-  flex: 5;
-  position: relative;
-}
 
 #header {
   align-items: center;
