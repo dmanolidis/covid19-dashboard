@@ -234,7 +234,7 @@ table_confirmed = dash_table.DataTable(
 		'overflowY': 'scroll'
 	},
 	style_as_list_view=True
-)
+	)
 
 
 table_deaths = dash_table.DataTable(
@@ -258,7 +258,7 @@ table_deaths = dash_table.DataTable(
 		'overflowY': 'scroll'
 	},
 	style_as_list_view=True
-)
+	)
 
 
 def graph_totals_tab(df, new_flag, graph_id, feat_dict, layout_dict):
@@ -273,29 +273,48 @@ def graph_totals_tab(df, new_flag, graph_id, feat_dict, layout_dict):
 	return dcc.Graph(id=graph_id,
 				figure={'data': [data],
 						'layout': layout_dict},
-				style={'height': '35vh'}
+				style={'height': '34vh'}
 				)
 
 		
 graph1_total = graph_totals_tab(total_confirmed, False, 'graph11', dict(mode='lines+markers'), 
-									dict(title="Total Confirmed Cases"))
+									{'title': {'text': "Total Confirmed Cases", 'yanchor': 'top'},
+									'margin': dict(l=5, r=5, b=1, t=30),
+									'xaxis': {'automargin': True},
+									'yaxis': {'automargin': True}})
 
 graph1_log_total = graph_totals_tab(total_confirmed, False, 'graph11_log', dict(mode='lines+markers'), 
-									{'title': "Total Confirmed Cases", 'yaxis': {'type': 'log'}})
+									{'title': {'text': "Total Confirmed Cases", 'yanchor': 'top'},
+									'margin': dict(l=5, r=5, b=1, t=30),
+									'xaxis': {'automargin': True},
+									'yaxis': {'automargin': True, 'type': 'log'}})
 
-graph1_new_total = graph_totals_tab(new_total_cases, True, 'graph11_new', dict(name="New Confirmed Cases", 
-									type='bar'), dict(title="New Confirmed Cases"))
+graph1_new_total = graph_totals_tab(new_total_cases, True, 'graph11_new', dict(type='bar'), 
+									{'title': {'text': "New Confirmed Cases", 'yanchor': 'top'},
+									'margin': dict(l=5, r=5, b=1, t=30),
+									'xaxis': {'automargin': True},
+									'yaxis': {'automargin': True}})
 
 graph2_total = graph_totals_tab(total_deaths, False, "graph12", 
-									dict(mode='lines+markers', marker=dict(color="Red")), dict(title="Total Deaths"))
+									dict(mode='lines+markers', marker=dict(color="Red")),
+									{'title': {'text': "Total Deaths", 'yanchor': 'top'},
+									'margin': dict(l=5, r=5, b=1, t=30),
+									'xaxis': {'automargin': True},
+									'yaxis': {'automargin': True}})
 
 graph2_log_total = graph_totals_tab(total_deaths, False, 'graph12_log',  
 									dict(mode='lines+markers', marker=dict(color="Red")), 
-									{'title': "Total Deaths", 'yaxis': {'type': 'log'}})
+									{'title': {'text': "Total Deaths", 'yanchor': 'top'},
+									'margin': dict(l=5, r=5, b=1, t=30),
+									'xaxis': {'automargin': True},
+									'yaxis': {'automargin': True, 'type': 'log'}})
 
 graph2_new_total = graph_totals_tab(new_total_deaths, True, "graph12_new", 
 										dict(type='bar', marker=dict(color="Red")),
-										dict(title="New Deaths"))
+										{'title': {'text': "New Deaths", 'yanchor': 'top'},
+										'margin': dict(l=5, r=5, b=1, t=30),
+										'xaxis': {'automargin': True},
+										'yaxis': {'automargin': True}})
 
 
 
@@ -552,16 +571,31 @@ def update_graphs_countries(country_sel):
 		
 		graph1 = {'data': [dict(x=graph1_df["date"], y=graph1_df["country"],
 					mode='lines+markers')],
-					'layout': dict(yaxis={'type': 'log'}, title= "Confirmed Cases")}
+					'layout': {'title': {'text': "Confirmed Cases", 'yanchor': 'top'},
+									'margin': dict(l=5, r=5, b=1, t=30),
+									'xaxis': {'automargin': True},
+									'yaxis': {'automargin': True, 'type': 'log'}}}
+
 		graph2 = {'data': [dict(x=graph2_df["date"], y=graph2_df["country"],
 					mode='lines+markers', marker=dict(color="Red"))],
-					'layout': dict(yaxis={'type': 'log'}, title= "Deaths")}
+					'layout': {'title': {'text': "Deaths", 'yanchor': 'top'},
+									'margin': dict(l=5, r=5, b=1, t=30),
+									'xaxis': {'automargin': True},
+									'yaxis': {'automargin': True, 'type': 'log'}}}
+
 		graph3 = {'data': [dict(x=graph3_df["date"], y=graph3_df["new"],
 					type='bar')],
-					'layout': dict(title= "New Confirmed Cases")}
+					'layout': {'title': {'text': "New Confirmed Cases", 'yanchor': 'top'},
+									'margin': dict(l=5, r=5, b=1, t=30),
+									'xaxis': {'automargin': True},
+									'yaxis': {'automargin': True}}}
+
 		graph4 = {'data': [dict(x=graph4_df["date"], y=graph4_df["new"],
 					type='bar', marker=dict(color="Red"))],
-					'layout': dict(title= "New Deaths")}
+					'layout': {'title': {'text': "New Deaths", 'yanchor': 'top'},
+									'margin': dict(l=5, r=5, b=1, t=30),
+									'xaxis': {'automargin': True},
+									'yaxis': {'automargin': True}}}
 		
 		return graph1, graph2, graph3, graph4
 	
