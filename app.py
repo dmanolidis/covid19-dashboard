@@ -184,7 +184,6 @@ def predict_country(country, country_df):
     return extended_dates, pred_full, flag
 
 
-
 # Confirmed cases
 conf_raw = pd.read_sql_table('confirmed', engine, index_col=0)
 confirmed = transform_export_countries_df(conf_raw)
@@ -197,8 +196,10 @@ deaths = transform_export_countries_df(death_raw)
 total_confirmed = total_confirmed_df(confirmed)
 total_deaths = total_confirmed_df(deaths)
 
-world_total_confirmed = str(total_confirmed.iloc[-1, -1].astype("int"))
-world_total_deaths = str(total_deaths.iloc[-1, -1].astype("int"))
+world_total_confirmed = total_confirmed.iloc[-1, -1].astype("int")
+world_total_confirmed = '{:,}'.format(world_total_confirmed)
+world_total_deaths = total_deaths.iloc[-1, -1].astype("int")
+world_total_deaths = '{:,}'.format(world_total_deaths)
 
 # New cases
 new_confirmed_cases = new_cases(confirmed)
@@ -213,52 +214,30 @@ new_total_cases = new_total_df(total_confirmed)
 new_total_deaths = new_total_df(total_deaths)
 
 
-table_confirmed = dash_table.DataTable(
-	id='table_conf',
-	columns=[{"name": i, "id": i} for i in new_confirmed_cases.columns],
-	data=new_confirmed_cases.to_dict('records'),
-	style_cell={'fontSize':14, 
-				'font-family':'sans-serif',
-				'textAlign': 'center',
-				'overflow': 'hidden',
-				'textOverflow': 'ellipsis',
-				'maxWidth': 0},
-	
-	style_header={
-		'backgroundColor': 'white',
-		'fontWeight': 'bold',
-		'textAlign': 'center'
-	},
-	style_table={
-		'maxHeight': '600px',
-		'overflowY': 'scroll'
-	},
-	style_as_list_view=True
-	)
-
-
-table_deaths = dash_table.DataTable(
-	id='table',
-	columns=[{"name": i, "id": i} for i in new_confirmed_deaths.columns],
-	data=new_confirmed_deaths.to_dict('records'),
-	style_cell={'fontSize':14, 
-				'font-family':'sans-serif',
-				'textAlign': 'center',
-				'overflow': 'hidden',
-				'textOverflow': 'ellipsis',
-				'maxWidth': 0},
-	
-	style_header={
-		'backgroundColor': 'white',
-		'fontWeight': 'bold',
-		'textAlign': 'center'
-	},
-	style_table={
-		'maxHeight': '600px',
-		'overflowY': 'scroll'
-	},
-	style_as_list_view=True
-	)
+def produce_table(df, table_id):
+	return dash_table.DataTable(
+						id=table_id,
+						columns=[{"name": i, "id": i} for i in df.columns],
+						data=df.to_dict('records'),
+						style_cell={'fontSize':14, 
+									'font-family':'sans-serif',
+									'textAlign': 'center',
+									'overflow': 'hidden',
+									'textOverflow': 'ellipsis',
+									'maxWidth': 0},
+						
+						style_header={
+							'backgroundColor': '#f2f2f2',
+							'fontWeight': 'bold',
+							'textAlign': 'center',
+							'height': 'auto'
+						},
+						style_table={
+							'maxHeight': '600px',
+							'overflowY': 'scroll'
+						},
+						style_as_list_view=True
+						)
 
 
 def graph_totals_tab(df, new_flag, graph_id, feat_dict, layout_dict):
@@ -276,51 +255,66 @@ def graph_totals_tab(df, new_flag, graph_id, feat_dict, layout_dict):
 				style={'height': '34vh'}
 				)
 
-		
-graph1_total = graph_totals_tab(total_confirmed, False, 'graph11', dict(mode='lines+markers'), 
-									{'title': {'text': "Total Confirmed Cases", 'yanchor': 'top'},
-									'margin': dict(l=5, r=5, b=1, t=30),
-									'xaxis': {'automargin': True},
-									'yaxis': {'automargin': True}})
 
-graph1_log_total = graph_totals_tab(total_confirmed, False, 'graph11_log', dict(mode='lines+markers'), 
-									{'title': {'text': "Total Confirmed Cases", 'yanchor': 'top'},
-									'margin': dict(l=5, r=5, b=1, t=30),
-									'xaxis': {'automargin': True},
-									'yaxis': {'automargin': True, 'type': 'log'}})
+def produce_layout_dict(title, log_flag):
+	if log_flag:
+		yaxis = {'automargin': True, 'type': 'log'}
+	else:
+		yaxis = {'automargin': True}
 
-graph1_new_total = graph_totals_tab(new_total_cases, True, 'graph11_new', dict(type='bar'), 
-									{'title': {'text': "New Confirmed Cases", 'yanchor': 'top'},
-									'margin': dict(l=5, r=5, b=1, t=30),
-									'xaxis': {'automargin': True},
-									'yaxis': {'automargin': True}})
+	return {'title': {'text': title, 'yanchor': 'top'},
+				'paper_bgcolor': colors_pallette["background_grey"],
+				'plot_bgcolor': colors_pallette["background_grey"],
+				'margin': dict(l=5, r=5, b=1, t=30),
+				'xaxis': {'automargin': True},
+				'yaxis': yaxis}
+
+
+colors_pallette = {'background_grey': '#f9f9f9', 'pastel_blue': '#19a6db','pastel_red': '#d70b00'}
+
+table_confirmed = produce_table(new_confirmed_cases, 'table_confirmed')
+table_deaths = produce_table(new_confirmed_deaths, 'table_deaths')
+
+graph1_total = graph_totals_tab(total_confirmed, False, 'graph11', 
+									dict(mode='lines', line=dict(color=colors_pallette["pastel_blue"],
+										width=6)), 
+									produce_layout_dict("Total Confirmed Cases", False))
+
+graph1_log_total = graph_totals_tab(total_confirmed, False, 'graph11_log', 
+									dict(mode='lines', line=dict(color=colors_pallette["pastel_blue"],
+										width=6)), 
+									produce_layout_dict("Total Confirmed Cases", True))
+
+graph1_new_total = graph_totals_tab(new_total_cases, True, 'graph11_new', 
+									dict(type='bar', marker=dict(color=colors_pallette["pastel_blue"])), 
+									produce_layout_dict("New Confirmed Cases", False))
 
 graph2_total = graph_totals_tab(total_deaths, False, "graph12", 
-									dict(mode='lines+markers', marker=dict(color="Red")),
-									{'title': {'text': "Total Deaths", 'yanchor': 'top'},
-									'margin': dict(l=5, r=5, b=1, t=30),
-									'xaxis': {'automargin': True},
-									'yaxis': {'automargin': True}})
+									dict(mode='lines', line=dict(color=colors_pallette["pastel_red"],
+										width=6)),
+									produce_layout_dict("Total Deaths", False))
 
 graph2_log_total = graph_totals_tab(total_deaths, False, 'graph12_log',  
-									dict(mode='lines+markers', marker=dict(color="Red")), 
-									{'title': {'text': "Total Deaths", 'yanchor': 'top'},
-									'margin': dict(l=5, r=5, b=1, t=30),
-									'xaxis': {'automargin': True},
-									'yaxis': {'automargin': True, 'type': 'log'}})
+									dict(mode='lines', line=dict(color=colors_pallette["pastel_red"],
+										width=6)), 
+									produce_layout_dict("Total Deaths", True))
 
 graph2_new_total = graph_totals_tab(new_total_deaths, True, "graph12_new", 
-										dict(type='bar', marker=dict(color="Red")),
-										{'title': {'text': "New Deaths", 'yanchor': 'top'},
-										'margin': dict(l=5, r=5, b=1, t=30),
-										'xaxis': {'automargin': True},
-										'yaxis': {'automargin': True}})
-
+									dict(type='bar', marker=dict(color=colors_pallette["pastel_red"])),
+									produce_layout_dict("New Deaths", False))
 
 
 app.layout = html.Div([
 				html.Div(
-					[html.H5("COVID-19 Dashboard")],
+					[html.H2("COVID-19 Dashboard", 
+						style={"margin-bottom": "0px"}),
+					
+					html.H6("This dashboard monitors the development of the COVID-19 outbreak", 
+					 	style={"margin-top": "0px", "margin-bottom": "0px"}),
+
+					html.H6("The data are provided by John Hopkins CSSE", 
+					 	style={"margin-top": "0px", "margin-bottom": "40px"})],
+					
 					style={'textAlign': 'center'}
 					),
 				
@@ -329,14 +323,20 @@ app.layout = html.Div([
 						children=[
 							html.Div([
 								html.Div([
-									html.H6("Total Confirmed Cases"),
-									html.H1(world_total_confirmed)],
+									html.H6("Total Confirmed Cases",
+										style={"margin-bottom": "0rem"}),
+									html.H1(world_total_confirmed, 
+										style={'font-family': "Arial",
+												'fontWeight': 'bold',
+												'margin-top': '-0.8rem',
+												'color': colors_pallette["pastel_blue"]})
+									],
 									style={'textAlign': 'center'},														
 									className="pretty_container",
 									),
 								
 								html.Div(
-									[html.H6("Confirmed Cases",
+									[html.H5("Confirmed Cases",
 											style={'textAlign': 'center', 
 													'margin-top': '-1rem',
 													'margin-bottom': '0.2rem'}),
@@ -347,14 +347,20 @@ app.layout = html.Div([
 							
 								html.Div([
 									html.Div([
-										html.H6("Total Deaths"),
-										html.H1(world_total_deaths)],
+										html.H6("Total Deaths",
+											style={"margin-bottom": "0rem"}),
+										html.H1(world_total_deaths, 
+											style={'font-family': "Arial",
+													'fontWeight': 'bold',
+													'margin-top': '-0.8rem',
+													'color': colors_pallette["pastel_red"]})
+										],
 										style={'textAlign': 'center'},
 										className="pretty_container",
 										),
 									
 									html.Div([
-										html.H6("Deaths",
+										html.H5("Deaths",
 											style={'textAlign': 'center', 
 													'margin-top': '-1rem',
 													'margin-bottom': '0.2rem'}),
@@ -368,19 +374,18 @@ app.layout = html.Div([
 										dcc.Tabs([
 											dcc.Tab(label='Linear', 
 												children=[
-													graph1_total]),
+													graph1_total],
+													className="custom-tab"),
 											dcc.Tab(label='Log', 
 												children=[
-													graph1_log_total]),
+													graph1_log_total],
+													className="custom-tab"),
 											dcc.Tab(label='New Cases', 
 												children=[
-													graph1_new_total])
-											], style={'fontSize': 12,
-														'font-family': "Arial",
-														'fontWeight': 'bold',
-														'height':'3.5vh',
-														'padding': '10px',
-														'line-height': '0.0001em'}
+													graph1_new_total],
+													className="custom-tab")
+											], style={'fontSize': 14,
+														'font-family': "Arial"}
 												)
 										], className="pretty_container"),
 											
@@ -388,24 +393,22 @@ app.layout = html.Div([
 										dcc.Tabs([
 											dcc.Tab(label='Linear', 
 												children=[
-													graph2_total]),
+													graph2_total],
+													className="custom-tab"),
 											dcc.Tab(label='Log', 
 												children=[
-													graph2_log_total]),
+													graph2_log_total],
+													className="custom-tab"),
 											dcc.Tab(label='New Deaths', 
 												children=[
-													graph2_new_total])
-											], style={'fontSize': 12,
-														'font-family': "Arial",
-														'fontWeight': 'bold',
-														'height':'3.5vh',
-														'padding': '10px',
-														'line-height': '0.0001em'}
+													graph2_new_total],
+													className="custom-tab")
+											], style={'fontSize': 14,
+														'font-family': "Arial"}
 												)
 										], className="pretty_container"),
 											
-									], className="six columns",
-										style={'flex': 'row'}),
+									], className="six columns"),
 
 						], className="pretty_container"),
 					
@@ -536,9 +539,8 @@ app.layout = html.Div([
 
 						], className="pretty_container")
 					
-					], style={'fontSize': 16,
-						'font-family': "Arial",
-						'fontWeight': 'bold'}					
+					], style={'fontSize': 20,
+						'font-family': "Arial"}					
 					),
 				
 				html.Div([
@@ -547,6 +549,7 @@ app.layout = html.Div([
 					[Code](https://github.com/dmanolidis/covid19-dashboard) \
 					| Developed by Dimitris Manolidis
 					""", style={'textAlign': 'center',
+								'margin-top': '20px',
 								'margin-left': '30%',
 								'margin-right': '30%'})
 					])
@@ -568,34 +571,48 @@ def update_graphs_countries(country_sel):
 		graph2_df = death_country_df(deaths, country_sel, True)
 		graph3_df = new_conf_country_df(confirmed, country_sel)
 		graph4_df = new_conf_country_df(deaths, country_sel)
-		
+
+		common_layout = {'paper_bgcolor': colors_pallette["background_grey"],
+							'plot_bgcolor': colors_pallette["background_grey"],
+							'margin': dict(l=5, r=5, b=1, t=30),
+							'xaxis': {'automargin': True}}
+
+		graph1_layout = {'title': {'text': "Confirmed Cases", 'yanchor': 'top'},
+									'yaxis': {'automargin': True, 'type': 'log'}}
+
+		graph2_layout = {'title': {'text': "Deaths", 'yanchor': 'top'},
+									'yaxis': {'automargin': True, 'type': 'log'}}
+
+		graph3_layout = {'title': {'text': "Deaths", 'yanchor': 'top'},
+									'yaxis': {'automargin': True}}
+
+		graph4_layout = {'title': {'text': "Deaths", 'yanchor': 'top'},
+									'yaxis': {'automargin': True}}
+
+		graph1_layout = dict(list(common_layout.items()) + list(graph1_layout.items()))
+		graph2_layout = dict(list(common_layout.items()) + list(graph2_layout.items()))
+		graph3_layout = dict(list(common_layout.items()) + list(graph3_layout.items()))
+		graph4_layout = dict(list(common_layout.items()) + list(graph4_layout.items()))
+
 		graph1 = {'data': [dict(x=graph1_df["date"], y=graph1_df["country"],
-					mode='lines+markers')],
-					'layout': {'title': {'text': "Confirmed Cases", 'yanchor': 'top'},
-									'margin': dict(l=5, r=5, b=1, t=30),
-									'xaxis': {'automargin': True},
-									'yaxis': {'automargin': True, 'type': 'log'}}}
+					mode='lines+markers', line=dict(color=colors_pallette["pastel_blue"],
+						width= 2), marker=dict(color=colors_pallette["pastel_blue"],
+						size= 8))],
+					'layout': graph1_layout}
 
 		graph2 = {'data': [dict(x=graph2_df["date"], y=graph2_df["country"],
-					mode='lines+markers', marker=dict(color="Red"))],
-					'layout': {'title': {'text': "Deaths", 'yanchor': 'top'},
-									'margin': dict(l=5, r=5, b=1, t=30),
-									'xaxis': {'automargin': True},
-									'yaxis': {'automargin': True, 'type': 'log'}}}
+					mode='lines+markers', line=dict(color=colors_pallette["pastel_red"],
+						width= 2), marker=dict(color=colors_pallette["pastel_red"],
+						size= 8))],
+					'layout': graph2_layout}
 
 		graph3 = {'data': [dict(x=graph3_df["date"], y=graph3_df["new"],
-					type='bar')],
-					'layout': {'title': {'text': "New Confirmed Cases", 'yanchor': 'top'},
-									'margin': dict(l=5, r=5, b=1, t=30),
-									'xaxis': {'automargin': True},
-									'yaxis': {'automargin': True}}}
+					type='bar', marker=dict(color=colors_pallette["pastel_blue"]))],
+					'layout': graph3_layout}
 
 		graph4 = {'data': [dict(x=graph4_df["date"], y=graph4_df["new"],
-					type='bar', marker=dict(color="Red"))],
-					'layout': {'title': {'text': "New Deaths", 'yanchor': 'top'},
-									'margin': dict(l=5, r=5, b=1, t=30),
-									'xaxis': {'automargin': True},
-									'yaxis': {'automargin': True}}}
+					type='bar', marker=dict(color=colors_pallette["pastel_red"]))],
+					'layout': graph4_layout}
 		
 		return graph1, graph2, graph3, graph4
 	
@@ -616,9 +633,14 @@ def update_graph1_country_prediction(country_1):
 		df_selected = conf_country_df(confirmed_more_100, country_1, 100, True)
 		extended_dates, pred_full, flag = predict_country(country_1, confirmed_more_100)
 
-		data1 = dict(x=df_selected["date"], y=df_selected["country"], name=country_1, mode='lines+markers')
+		data1 = dict(x=df_selected["date"], y=df_selected["country"], 
+						name=country_1, mode='lines+markers',
+						line={'width': 2},
+						marker={'size': 10})
 		if flag != "nope":
-			data2 = dict(x=extended_dates, y=pred_full, name= "Prediction", mode='lines')
+			data2 = dict(x=extended_dates, y=pred_full, 
+						name= "Prediction", mode='lines',
+						line={'width': 5})
 			data = [data2, data1]
 			if flag == "log":
 				title_name = country_1 + ": Logistic Prediction"
@@ -635,7 +657,9 @@ def update_graph1_country_prediction(country_1):
 		
 	return {
 		'data': data,
-		'layout': dict(title=title_name)}
+		'layout': dict(title=title_name,
+						paper_bgcolor=colors_pallette["background_grey"],
+						plot_bgcolor=colors_pallette["background_grey"],)}
 
 
 @app.callback(
@@ -648,20 +672,28 @@ def update_graph1_comparison(country_1, country_2):
 	if country_1 and country_2:
 		c1 = conf_country_df(confirmed_more_100, country_1, 100, False)
 		c2 = conf_country_df(confirmed_more_100, country_2, 100, False)
-		data1 = dict(x=c1["days"], y=c1["country"], name=country_1, mode='lines+markers') 
-		data2 = dict(x=c2["days"], y=c2["country"], name=country_2, mode='lines+markers')
+		data1 = dict(x=c1["days"], y=c1["country"], name=country_1, mode='lines+markers',
+						line={'width': 2},
+						marker={'size': 8}) 
+		data2 = dict(x=c2["days"], y=c2["country"], name=country_2, mode='lines+markers',
+						line={'width': 2},
+						marker={'size': 8})
 		data = [data1, data2]
 		title_name = "Confirmed Cases:   " + country_1 + " vs " + country_2
 	
 	elif country_1:
 		c1 = conf_country_df(confirmed_more_100, country_1, 100, False)
-		data1 = dict(x=c1["days"], y=c1["country"], name=country_1, mode='lines+markers')
+		data1 = dict(x=c1["days"], y=c1["country"], name=country_1, mode='lines+markers',
+						line={'width': 2},
+						marker={'size': 8})
 		data = [data1]
 		title_name = "Confirmed Cases:   " + country_1
 	
 	elif country_2:
 		c2 = conf_country_df(confirmed_more_100, country_2, 100, False)
-		data2 = dict(x=c2["days"], y=c2["country"], name=country_2, mode='lines+markers')
+		data2 = dict(x=c2["days"], y=c2["country"], name=country_2, mode='lines+markers',
+						line={'width': 2},
+						marker={'size': 8})
 		data = [data2]
 		title_name = "Confirmed Cases:   " + country_2
 	
@@ -672,6 +704,8 @@ def update_graph1_comparison(country_1, country_2):
 	return {
 		'data': data,
 		'layout': dict(yaxis={'type': 'log'},
+						paper_bgcolor=colors_pallette["background_grey"],
+						plot_bgcolor=colors_pallette["background_grey"],
 						title=title_name)}
 
 @app.callback(
@@ -684,20 +718,28 @@ def update_graph2_comparison(country_1, country_2):
 	if country_1 and country_2:
 		c1 = death_country_df(deaths, country_1, False)
 		c2 = death_country_df(deaths, country_2, False)
-		data1 = dict(x=c1["days"], y=c1["country"], name=country_1, mode='lines+markers') 
-		data2 = dict(x=c2["days"], y=c2["country"], name=country_2, mode='lines+markers')
+		data1 = dict(x=c1["days"], y=c1["country"], name=country_1, mode='lines+markers',
+						line={'width': 2},
+						marker={'size': 8}) 
+		data2 = dict(x=c2["days"], y=c2["country"], name=country_2, mode='lines+markers',
+						line={'width': 2},
+						marker={'size': 8})
 		data = [data1, data2]
 		title_name = "Deaths:   " + country_1 + " vs " + country_2
 	
 	elif country_1:
 		c1 = death_country_df(deaths, country_1, False)
-		data1 = dict(x=c1["days"], y=c1["country"], name=country_1, mode='lines+markers')
+		data1 = dict(x=c1["days"], y=c1["country"], name=country_1, mode='lines+markers',
+						line={'width': 2},
+						marker={'size': 8})
 		data = [data1]
 		title_name = "Deaths:   " + country_1
 	
 	elif country_2:
 		c2 = death_country_df(deaths, country_2, False)
-		data2 = dict(x=c2["days"], y=c2["country"], name=country_2, mode='lines+markers')
+		data2 = dict(x=c2["days"], y=c2["country"], name=country_2, mode='lines+markers',
+						line={'width': 2},
+						marker={'size': 8})
 		data = [data2]
 		title_name = "Deaths:   " + country_2
 	
@@ -708,9 +750,11 @@ def update_graph2_comparison(country_1, country_2):
 	return {
 		'data': data,
 		'layout': dict(yaxis={'type': 'log'},
+						paper_bgcolor=colors_pallette["background_grey"],
+						plot_bgcolor=colors_pallette["background_grey"],
 						title=title_name)}
 
 
 
 if __name__ == "__main__":
-	app.run_server(debug=True)
+	app.run_server(debug=False)
