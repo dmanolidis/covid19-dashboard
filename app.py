@@ -219,14 +219,14 @@ def produce_table(df, table_id):
 						id=table_id,
 						columns=[{"name": i, "id": i} for i in df.columns],
 						data=df.to_dict('records'),
-						style_cell={'fontSize':14, 
+						style_cell={'fontSize': '1vw', 
 									'font-family':'sans-serif',
 									'textAlign': 'center',
 									'overflow': 'hidden',
 									'textOverflow': 'ellipsis',
 									'maxWidth': 0},
 						
-						style_header={
+						style_header={'fontSize': '0.8vw',
 							'backgroundColor': '#f2f2f2',
 							'fontWeight': 'bold',
 							'textAlign': 'center',
@@ -327,6 +327,7 @@ app.layout = html.Div([
 										style={"margin-bottom": "0rem"}),
 									html.H1(world_total_confirmed, 
 										style={'font-family': "Arial",
+												'font-size': '2.8vw',
 												'fontWeight': 'bold',
 												'margin-top': '-0.8rem',
 												'color': colors_pallette["pastel_blue"]})
@@ -351,6 +352,7 @@ app.layout = html.Div([
 											style={"margin-bottom": "0rem"}),
 										html.H1(world_total_deaths, 
 											style={'font-family': "Arial",
+													'font-size': '2.8vw',
 													'fontWeight': 'bold',
 													'margin-top': '-0.8rem',
 													'color': colors_pallette["pastel_red"]})
