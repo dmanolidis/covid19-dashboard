@@ -14,6 +14,7 @@ engine = create_engine(DATABASE_URL, connect_args={'sslmode':'require'})
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
+
 app = dash.Dash(__name__)
 app.title = 'COVID-19 Dashboard'
 server = app.server
@@ -74,17 +75,17 @@ def countries_more_than_n(confirmed, deaths, n):
 
 
 def conf_country_df(confirmed, country, n, date_flag):
-    df = confirmed[["date", country]].copy()
-    df = df[df[country] > n].sort_values("date").copy()
-    df = df.rename(columns={country: "country"})
+	df = confirmed[["date", country]].copy()
+	df = df[df[country] > n].sort_values("date").copy()
+	df = df.rename(columns={country: "country"})
 
-    df["init"] = df[df["country"] > n].iloc[0, 0]
-    df["days"] = (df["date"] - df["init"]).dt.days
-    df = df.reset_index(drop=True)
-    if date_flag:
-         return df[["date", "country"]]
-    else:
-         return df[["days", "country"]]
+	df["init"] = df[df["country"] > n].iloc[0, 0]
+	df["days"] = (df["date"] - df["init"]).dt.days
+	df = df.reset_index(drop=True)
+	if date_flag:
+		 return df[["date", "country"]]
+	else:
+		 return df[["days", "country"]]
 
 
 def death_country_df(deaths, country, date_flag):
@@ -123,65 +124,99 @@ from scipy.optimize import curve_fit
 
 
 def log_func(x, K, a, r):
-    return K/(1 + a*np.exp(-r * x))
+	return K/(1 + a*np.exp(-r * x))
 
 
 def exp_func(x, a, r):
-    return a*np.exp(-r * x)
+	return a*np.exp(-r * x)
 
 
 def fit_func(xdata, ydata):
-    try:
-        K0 = ydata.iloc[-1]
-        C0 = ydata.iloc[0]
-        a0 = (K0 - C0)/C0
-        r0 = 1
-        popt, pcov = curve_fit(log_func, xdata, ydata, p0=[K0, a0, r0], bounds=([K0, 0, 0], np.inf))
-        pred = log_func(xdata, *popt)
-        flag = "log"
-        
-    except:
-        try:
-            popt, pcov = curve_fit(exp_func, xdata, ydata)
-            pred = exp_func(xdata, *popt)
-            flag = "exp"
+	sigma = np.ones(len(xdata))
+	sigma[-1] = 0.01
+	K0 = ydata.iloc[-1]
+	C0 = ydata.iloc[0]
+	a0 = (K0 - C0)/C0
+	r0 = 1
 
-        except:
-            popt = []
-            pred = []
-            flag = "nope"
-            
-    return pred, flag, popt
+	try:
+		
+		popt, pcov = curve_fit(log_func, xdata, ydata, p0=[K0, a0, r0], 
+						bounds=([K0, 0, 0], np.inf), sigma=sigma)
+		pred = log_func(xdata, *popt)
+		flag = "log"
+		perr = np.sqrt(np.diag(pcov))
+		low_popt = popt - perr
+		high_popt = popt + perr
+
+	except:
+		try:
+			popt, pcov = curve_fit(exp_func, xdata, ydata, p0=[a0, -r0],
+									bounds=([0, -np.inf], [np.inf, 0]),
+									sigma=sigma)
+			pred = exp_func(xdata, *popt)
+			flag = "exp"
+			perr = np.sqrt(np.diag(pcov))
+			low_popt = popt + np.array([-perr[0], perr[1]])
+			high_popt = popt + np.array([perr[0], -perr[1]])
+
+		except:
+			popt = []
+			pred = []
+			pcov = []
+			low_popt = []
+			high_popt = []
+			flag = "nope"
+
+			
+	return pred, flag, popt, low_popt, high_popt
 
 
 def predict_country(country, country_df):
-    df = conf_country_df(country_df, country, 100, True).copy()
-    xdata = np.array(df.index)
-    xdata += 1
-    ydata = df["country"]
-    
-    pred, flag, popt = fit_func(xdata, ydata)
-    
-    # Extension
-    last_indx = xdata[-1]
-    extension_period = 10
-    xdata_extend = np.append(xdata, np.arange(last_indx+1, last_indx+extension_period))
-    
-    dates = df["date"]
-    init_date = df["date"].iloc[-1]
-    extension = pd.date_range(init_date, periods=extension_period)[1:]
-    extended_dates = pd.concat([dates, pd.Series(extension)]).reset_index(drop=True)
-    
-    if flag=="log":
-        pred_full = log_func(xdata_extend, *popt)
-        pred_full = np.round(pred_full)
-    elif flag=="exp":
-        pred_full = exp_func(xdata_extend, *popt)
-        pred_full = np.round(pred_full)
-    else:
-        pred_full = []
-    
-    return extended_dates, pred_full, flag
+	df = conf_country_df(country_df, country, 100, True).copy()
+	xdata = np.array(df.index)
+	xdata += 1
+	ydata = df["country"]
+	y_last = ydata.iloc[-1]
+
+	pred, flag, popt, low_popt, high_popt = fit_func(xdata, ydata)
+	
+	# Extension
+	last_indx = xdata[-1]
+	extension_period = 10
+	xdata_extension = np.arange(last_indx+1, last_indx+extension_period)
+	xdata_extend = np.append(xdata, xdata_extension)
+	
+	dates = df["date"]
+	init_date = df["date"].iloc[-1]
+	extension = pd.date_range(init_date, periods=extension_period)[1:]
+	extension = pd.Series(extension)
+	extended_dates = pd.concat([dates, extension]).reset_index(drop=True)
+	
+	if flag=="log":
+		pred_full = log_func(xdata_extend, *popt)
+		pred_full = np.round(pred_full)
+		pred_low = log_func(xdata_extension, *low_popt)
+		pred_low = np.round(pred_low)
+		pred_low = np.maximum(pred_low, y_last)
+		pred_high = log_func(xdata_extension, *high_popt)
+		pred_high = np.round(pred_high)
+
+	elif flag=="exp":
+		pred_full = exp_func(xdata_extend, *popt)
+		pred_full = np.round(pred_full)
+		pred_low = exp_func(xdata_extension, *low_popt)
+		pred_low = np.round(pred_low)
+		pred_low = np.maximum(pred_low, y_last)
+		pred_high = exp_func(xdata_extension, *high_popt)
+		pred_high = np.round(pred_high)
+
+	else:
+		pred_full = []
+		pred_low = []
+		pred_high = []
+	
+	return extension, extended_dates, pred_full, pred_low, pred_high, flag
 
 
 # Confirmed cases
@@ -358,8 +393,7 @@ app.layout = html.Div([
 													'color': colors_pallette["pastel_red"]})
 										],
 										style={'textAlign': 'center'},
-										className="pretty_container",
-										),
+										className="pretty_container"),
 									
 									html.Div([
 										html.H5("Deaths",
@@ -367,8 +401,7 @@ app.layout = html.Div([
 													'margin-top': '-1rem',
 													'margin-bottom': '0.2rem'}),
 										table_deaths
-										], className="pretty_container",
-										)	
+										], className="pretty_container")	
 									], className="three columns"),
 										
 								html.Div([
@@ -420,7 +453,8 @@ app.layout = html.Div([
 								html.Div([
 									dcc.Dropdown(
 										id='country_sel',
-										options=[{'label': i, 'value': i} for i in confirmed_more_1.columns[1:]],
+										options=[{'label': i, 'value': i} for i \
+														in confirmed_more_1.columns[1:]],
 										value='Italy'
 										)
 									],
@@ -469,7 +503,8 @@ app.layout = html.Div([
 								html.Div([
 									dcc.Dropdown(
 										id='country_sel_prediction',
-										options=[{'label': i, 'value': i} for i in confirmed_more_100.columns[1:]],
+										options=[{'label': i, 'value': i} for i \
+														in confirmed_more_100.columns[1:]],
 										value='Italy'
 										)
 									],
@@ -483,10 +518,13 @@ app.layout = html.Div([
 									style={'height': '75vh'}),
 							
 							html.Div([
-								html.P("This tab shows a prediction for the confirmed \
-									cases of the selected country. The prediction starts on the first day \
-									the selected country had more than 100 total cases. The prediction \
-									is based on the logistic model.")],
+								html.P("""This tab shows a prediction for the confirmed \
+									cases of the selected country. The prediction starts \
+									on the first day the selected country had more than 100 total \
+									cases. A logistic curve is fit to the data. If that is \
+									not possible (usually that means that the country is on \
+									the early stage of exponential growth), an exponential \
+									curve is fit to the data. Confidence intervals are also shown.""")],
 											
 									style={'textAlign': 'center',
 											'margin-left': '30%',
@@ -502,7 +540,8 @@ app.layout = html.Div([
 								html.Div([
 									dcc.Dropdown(
 										id='country1',
-										options=[{'label': i, 'value': i} for i in confirmed_more_100.columns[1:]],
+										options=[{'label': i, 'value': i} for i \
+														in confirmed_more_100.columns[1:]],
 										value='Italy'
 										)
 									], style={'width': '25%', 'display': 'inline-block',
@@ -511,7 +550,8 @@ app.layout = html.Div([
 								html.Div([
 									dcc.Dropdown(
 										id='country2',
-										options=[{'label': i, 'value': i} for i in confirmed_more_100.columns[1:]],
+										options=[{'label': i, 'value': i} for i \
+														in confirmed_more_100.columns[1:]],
 										value='Spain'
 									)
 									], style={'width': '25%', 'display': 'inline-block'})
@@ -619,7 +659,8 @@ def update_graphs_countries(country_sel):
 		return graph1, graph2, graph3, graph4
 	
 	else:
-		empty_graph = {'data': [dict(x=[],y=[], mode='lines+markers')], 'layout': dict(title= "")}
+		empty_graph = {'data': [dict(x=[],y=[], mode='lines+markers')], 
+						'layout': dict(title= "")}
 		
 		return empty_graph, empty_graph, empty_graph, empty_graph
 
@@ -633,17 +674,45 @@ def update_graph1_country_prediction(country_1):
 
 	if country_1:
 		df_selected = conf_country_df(confirmed_more_100, country_1, 100, True)
-		extended_dates, pred_full, flag = predict_country(country_1, confirmed_more_100)
+		extension, extended_dates, pred_full, pred_low, pred_high, flag = \
+						predict_country(country_1, confirmed_more_100)
 
 		data1 = dict(x=df_selected["date"], y=df_selected["country"], 
 						name=country_1, mode='lines+markers',
-						line={'width': 2},
-						marker={'size': 10})
+						line={'width': 2, 'color': '#ff7f0e'},
+						marker={'size': 10, 'color': '#ff7f0e'})
+		
 		if flag != "nope":
 			data2 = dict(x=extended_dates, y=pred_full, 
-						name= "Prediction", mode='lines',
-						line={'width': 5})
-			data = [data2, data1]
+							name= "Prediction", mode='lines',
+							line={'width': 5,'color': '#1f77b4'})
+
+			data3 = dict(x=list(extension) + list(extension[::-1]), 
+							y=list(pred_high) + list(pred_low[::-1]),
+							fill="toself", 
+							fillcolor="#b3e0ff",
+							name="Prediction Interval", 
+							mode='lines',
+							line={'color': "transparent"},
+							legendgroup="group")
+			
+			data4 = dict(x=list(extension), 
+							y=list(pred_low),
+							name="", 
+							mode='lines',
+							line={'width': 0.1,'color': '#b3e0ff'},
+							legendgroup="group",
+							showlegend=False)
+
+			data5 = dict(x=list(extension), 
+							y=list(pred_high),
+							name="", 
+							mode='lines',
+							line={'width': 0.1,'color': '#b3e0ff'},
+							legendgroup="group",
+							showlegend=False)
+
+			data = [data5, data4, data3, data2, data1]
 			if flag == "log":
 				title_name = country_1 + ": Logistic Prediction"
 			elif flag == "exp":
@@ -651,7 +720,7 @@ def update_graph1_country_prediction(country_1):
 
 		else:
 			data = [data1]
-			title_name = country_1 + " No prediction generated"
+			title_name = country_1 + ": No prediction generated"
 	
 	else:
 		data = [dict(x=[], y=[], mode='lines+markers')]
