@@ -4,21 +4,23 @@ import dash_core_components as dcc
 import dash_html_components as html
 import pandas as pd
 from dash.dependencies import Input, Output
-import dash_bootstrap_components as dbc
 import numpy as np
 import os
 from sqlalchemy import create_engine
+from scipy.optimize import curve_fit
 
+
+# Access the heroku database linked to the app
 DATABASE_URL = os.environ['DATABASE_URL']
 engine = create_engine(DATABASE_URL, connect_args={'sslmode':'require'})
-
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 
 app = dash.Dash(__name__)
 app.title = 'COVID-19 Dashboard'
 server = app.server
 
+
+# ===== Functions =====
 
 def transform_export_countries_df(raw):
 	
@@ -40,6 +42,7 @@ def total_confirmed_df(confirmed):
 	total_df = pd.DataFrame(total)
 	return total_df
 
+
 def new_cases(df, flag_confirmed=True):
 	new_cases_df = df.tail(2)
 	new_cases_df.diff()
@@ -57,7 +60,6 @@ def new_cases(df, flag_confirmed=True):
 	else:
 		cases.columns = ["Country", "New Deaths", "Total Deaths"]
 		return cases.sort_values(["New Deaths", "Total Deaths"], ascending=False)
-	
 
 
 def get_country_coords(raw):
@@ -119,9 +121,7 @@ def new_conf_country_df(confirmed, country):
 	return df[["date", "new"]]
 
 
-# Prediction
-from scipy.optimize import curve_fit
-
+# ===== Prediction functions =====
 
 def log_func(x, K, a, r):
 	return K/(1 + a*np.exp(-r * x))
@@ -132,15 +132,19 @@ def exp_func(x, a, r):
 
 
 def fit_func(xdata, ydata):
+	
+	# Force curve fit to go through the last point
 	sigma = np.ones(len(xdata))
 	sigma[-1] = 0.01
+	
+	# Initial guesses for the curve fit
 	K0 = ydata.iloc[-1]
 	C0 = ydata.iloc[0]
 	a0 = (K0 - C0)/C0
 	r0 = 1
 
 	try:
-		
+		# First try a logistic curve fit
 		popt, pcov = curve_fit(log_func, xdata, ydata, p0=[K0, a0, r0], 
 						bounds=([K0, 0, 0], np.inf), sigma=sigma)
 		pred = log_func(xdata, *popt)
@@ -151,6 +155,7 @@ def fit_func(xdata, ydata):
 
 	except:
 		try:
+			# If logistic curve fit fails, try an exponential fit
 			popt, pcov = curve_fit(exp_func, xdata, ydata, p0=[a0, -r0],
 									bounds=([0, -np.inf], [np.inf, 0]),
 									sigma=sigma, maxfev=1000)
@@ -161,14 +166,14 @@ def fit_func(xdata, ydata):
 			high_popt = popt + np.array([perr[0], -perr[1]])
 
 		except:
+			# If both fits fail, produce no fit
 			popt = []
 			pred = []
 			pcov = []
 			low_popt = []
 			high_popt = []
 			flag = "nope"
-
-			
+	
 	return pred, flag, popt, low_popt, high_popt
 
 
@@ -177,8 +182,10 @@ def predict_country(country, country_df):
 	xdata = np.array(df.index)
 	xdata += 1
 	ydata = df["country"]
+	# Last point
 	y_last = ydata.iloc[-1]
 
+	# Get the curve fit
 	pred, flag, popt, low_popt, high_popt = fit_func(xdata, ydata)
 	
 	# Extension
@@ -187,6 +194,7 @@ def predict_country(country, country_df):
 	xdata_extension = np.arange(last_indx+1, last_indx+extension_period)
 	xdata_extend = np.append(xdata, xdata_extension)
 	
+	# Extension for dates
 	dates = df["date"]
 	init_date = df["date"].iloc[-1]
 	extension = pd.date_range(init_date, periods=extension_period)[1:]
@@ -219,13 +227,22 @@ def predict_country(country, country_df):
 	return extension, extended_dates, pred_full, pred_low, pred_high, flag
 
 
+# ===== Global variables =====
+
+colors_pallette = {'background_grey': '#f9f9f9', 'pastel_blue': '#19a6db','pastel_red': '#d70b00'}
+
 # Confirmed cases
+# Read data from database
 conf_raw = pd.read_sql_table('confirmed', engine, index_col=0)
+# Transform data
 confirmed = transform_export_countries_df(conf_raw)
 
 # Deaths
+# Read data from database
 death_raw = pd.read_sql_table('deaths', engine, index_col=0)
+# Transform data
 deaths = transform_export_countries_df(death_raw)
+
 
 # Totals
 total_confirmed = total_confirmed_df(confirmed)
@@ -236,18 +253,25 @@ world_total_confirmed = '{:,}'.format(world_total_confirmed)
 world_total_deaths = total_deaths.iloc[-1, -1].astype("int")
 world_total_deaths = '{:,}'.format(world_total_deaths)
 
+
 # New cases
 new_confirmed_cases = new_cases(confirmed)
 new_confirmed_deaths = new_cases(deaths, flag_confirmed=False)
 
-confirmed_more_100 = countries_more_than_n(confirmed, deaths, 100)
-confirmed_more_1 = countries_more_than_n(confirmed, deaths, 1)
-
-country_coords = get_country_coords(conf_raw)
-
 new_total_cases = new_total_df(total_confirmed)
 new_total_deaths = new_total_df(total_deaths)
 
+
+# Countries with more than n cases
+confirmed_more_100 = countries_more_than_n(confirmed, deaths, 100)
+confirmed_more_1 = countries_more_than_n(confirmed, deaths, 1)
+
+
+# Country coordinates are not used for now
+country_coords = get_country_coords(conf_raw)
+
+
+# ===== Total Overview tab functions =====
 
 def produce_table(df, table_id):
 	return dash_table.DataTable(
@@ -276,6 +300,8 @@ def produce_table(df, table_id):
 
 
 def graph_totals_tab(df, new_flag, graph_id, feat_dict, layout_dict):
+	# This function is used to produce the graphs of the Total Overview tab
+
 	if not new_flag:
 		y = df["total"]
 	else:
@@ -292,6 +318,8 @@ def graph_totals_tab(df, new_flag, graph_id, feat_dict, layout_dict):
 
 
 def produce_layout_dict(title, log_flag):
+	# This function is used to produce the layout of the graphs of the Total Overview tab
+
 	if log_flag:
 		yaxis = {'automargin': True, 'type': 'log'}
 	else:
@@ -305,7 +333,7 @@ def produce_layout_dict(title, log_flag):
 				'yaxis': yaxis}
 
 
-colors_pallette = {'background_grey': '#f9f9f9', 'pastel_blue': '#19a6db','pastel_red': '#d70b00'}
+# ===== Total Overview tab tables and graphs =====
 
 table_confirmed = produce_table(new_confirmed_cases, 'table_confirmed')
 table_deaths = produce_table(new_confirmed_deaths, 'table_deaths')
@@ -339,9 +367,10 @@ graph2_new_total = graph_totals_tab(new_total_deaths, True, "graph12_new",
 									produce_layout_dict("New Deaths", False))
 
 
+# ===== Layout =====
+
 app.layout = html.Div([
-				html.Div(
-					[html.H2("COVID-19 Dashboard", 
+				html.Div([html.H2("COVID-19 Dashboard", 
 						style={"margin-bottom": "0px"}),
 					
 					html.H6("This dashboard monitors the development of the COVID-19 outbreak", 
@@ -350,11 +379,12 @@ app.layout = html.Div([
 					html.H6("The data are provided by John Hopkins CSSE", 
 					 	style={"margin-top": "0px", "margin-bottom": "40px"})],
 					
-					style={'textAlign': 'center'}
+					style={'textAlign': 'center'},
+					id="header"
 					),
 				
 				dcc.Tabs([
-					dcc.Tab(label='Total Overview', 
+					dcc.Tab(id="total_overview", label='Total Overview', 
 						children=[
 							html.Div([
 								html.Div([
@@ -447,7 +477,7 @@ app.layout = html.Div([
 
 						], className="pretty_container"),
 					
-					dcc.Tab(label='Country Overview', 
+					dcc.Tab(id="country_overview", label='Country Overview', 
 						children=[
 							html.Div([
 								html.Div([
@@ -455,7 +485,7 @@ app.layout = html.Div([
 										id='country_sel',
 										options=[{'label': i, 'value': i} for i \
 														in confirmed_more_1.columns[1:]],
-										value='Italy'
+										value='US'
 										)
 									],
 									style={'width': '25%', 'display': 'inline-block',
@@ -497,7 +527,7 @@ app.layout = html.Div([
 
 							], className="pretty_container"),
 					
-					dcc.Tab(label='Country Prediction', 
+					dcc.Tab(id="country_prediction", label='Country Prediction', 
 						children=[		
 							html.Div([
 								html.Div([
@@ -505,7 +535,7 @@ app.layout = html.Div([
 										id='country_sel_prediction',
 										options=[{'label': i, 'value': i} for i \
 														in confirmed_more_100.columns[1:]],
-										value='Italy'
+										value='US'
 										)
 									],
 									style={'width': '25%', 'display': 'inline-block',
@@ -524,8 +554,8 @@ app.layout = html.Div([
 									cases. A logistic curve is fit to the data. If that is \
 									not possible (usually that means that the country is on \
 									the early stage of exponential growth), an exponential \
-									curve is fit to the data. Confidence intervals are also shown.""")],
-											
+									curve is fit to the data. Confidence intervals are also shown."""
+									)],		
 									style={'textAlign': 'center',
 											'margin-left': '30%',
 											'margin-right': '30%'},
@@ -534,7 +564,7 @@ app.layout = html.Div([
 							], className="pretty_container"),
 					
 
-					dcc.Tab(label='Country Comparison', 
+					dcc.Tab(id="country_comparison", label='Country Comparison', 
 						children=[
 							html.Div([
 								html.Div([
@@ -582,7 +612,8 @@ app.layout = html.Div([
 						], className="pretty_container")
 					
 					], style={'fontSize': 20,
-						'font-family': "Arial"}					
+						'font-family': "Arial"},
+						id="tabs"					
 					),
 				
 				html.Div([
@@ -593,10 +624,13 @@ app.layout = html.Div([
 					""", style={'textAlign': 'center',
 								'margin-top': '20px',
 								'margin-left': '30%',
-								'margin-right': '30%'})
+								'margin-right': '30%'},
+						id="about")
 					])
 				])
 
+
+# ===== Country Overview tab callbacks =====
 
 @app.callback(
 	[Output('graph1_country', 'figure'),
@@ -665,6 +699,8 @@ def update_graphs_countries(country_sel):
 		return empty_graph, empty_graph, empty_graph, empty_graph
 
 
+# ===== Country Prediction tab callbacks =====
+
 @app.callback(
 	Output('graph1_country_prediction', 'figure'),
 	[Input('country_sel_prediction', 'value')])
@@ -732,6 +768,8 @@ def update_graph1_country_prediction(country_1):
 						paper_bgcolor=colors_pallette["background_grey"],
 						plot_bgcolor=colors_pallette["background_grey"],)}
 
+
+# ===== Country Comparison tab callbacks =====
 
 @app.callback(
 	Output('graph1_comparison', 'figure'),
