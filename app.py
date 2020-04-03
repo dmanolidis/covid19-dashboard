@@ -549,12 +549,15 @@ app.layout = html.Div([
 							
 							html.Div([
 								html.P("""This tab shows a prediction for the confirmed \
-									cases of the selected country. The prediction starts \
-									on the first day the selected country had more than 100 total \
-									cases. A logistic curve is fit to the data. If that is \
-									not possible (usually that means that the country is on \
-									the early stage of exponential growth), an exponential \
-									curve is fit to the data. Confidence intervals are also shown."""
+									cases of the selected country. The model used is very simple, \
+									not taking into account many factors that can affect the development \
+									of the disease, thus, its predicting capability is limited. \
+									The prediction starts on the first day the selected country \
+									had more than 100 total cases. A logistic curve is fit to \
+									the data. If that is not possible (usually that means \
+									that the country is on the early stage of exponential \
+									growth), an exponential curve is fit to the data. \
+									Confidence intervals are also shown."""
 									)],		
 									style={'textAlign': 'center',
 											'margin-left': '30%',
