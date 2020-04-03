@@ -153,7 +153,7 @@ def fit_func(xdata, ydata):
 		try:
 			popt, pcov = curve_fit(exp_func, xdata, ydata, p0=[a0, -r0],
 									bounds=([0, -np.inf], [np.inf, 0]),
-									sigma=sigma)
+									sigma=sigma, maxfev=1000)
 			pred = exp_func(xdata, *popt)
 			flag = "exp"
 			perr = np.sqrt(np.diag(pcov))
