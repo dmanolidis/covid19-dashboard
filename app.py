@@ -413,7 +413,8 @@ graph_map = dcc.Graph(figure={'data': [dict(
 									sizemode = 'area')
 									)],
 							'layout': dict(geo=dict(
-									visible=True, resolution=110,
+									visible=True, 
+									resolution=110,
 									showcountries=True, 
 									countrycolor="black", 
 									projection_type="mercator"),
@@ -738,16 +739,16 @@ def update_graphs_countries(country_sel):
 							'margin': dict(l=5, r=5, b=1, t=30),
 							'xaxis': {'automargin': True}}
 
-		graph1_layout = {'title': {'text': "Confirmed Cases", 'yanchor': 'top'},
+		graph1_layout = {'title': {'text': "Total Confirmed Cases", 'yanchor': 'top'},
 									'yaxis': {'automargin': True, 'type': 'log'}}
 
-		graph2_layout = {'title': {'text': "Deaths", 'yanchor': 'top'},
+		graph2_layout = {'title': {'text': "Total Deaths", 'yanchor': 'top'},
 									'yaxis': {'automargin': True, 'type': 'log'}}
 
-		graph3_layout = {'title': {'text': "Deaths", 'yanchor': 'top'},
+		graph3_layout = {'title': {'text': "New Confirmed Cases", 'yanchor': 'top'},
 									'yaxis': {'automargin': True}}
 
-		graph4_layout = {'title': {'text': "Deaths", 'yanchor': 'top'},
+		graph4_layout = {'title': {'text': "New Deaths", 'yanchor': 'top'},
 									'yaxis': {'automargin': True}}
 
 		graph1_layout = dict(list(common_layout.items()) + list(graph1_layout.items()))
