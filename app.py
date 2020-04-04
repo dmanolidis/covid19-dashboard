@@ -229,7 +229,7 @@ def predict_country(country, country_df):
 
 # ===== Global variables =====
 
-colors_pallette = {'background_grey': '#f9f9f9', 'pastel_blue': '#19a6db','pastel_red': '#d70b00'}
+colors_palette = {'background_grey': '#f9f9f9', 'pastel_blue': '#19a6db','pastel_red': '#d70b00'}
 
 # Confirmed cases
 # Read data from database
@@ -267,7 +267,7 @@ confirmed_more_100 = countries_more_than_n(confirmed, deaths, 100)
 confirmed_more_1 = countries_more_than_n(confirmed, deaths, 1)
 
 
-# Country coordinates are not used for now
+# Country coordinates
 country_coords = get_country_coords(conf_raw)
 
 
@@ -326,8 +326,8 @@ def produce_layout_dict(title, log_flag):
 		yaxis = {'automargin': True}
 
 	return {'title': {'text': title, 'yanchor': 'top'},
-				'paper_bgcolor': colors_pallette["background_grey"],
-				'plot_bgcolor': colors_pallette["background_grey"],
+				'paper_bgcolor': colors_palette["background_grey"],
+				'plot_bgcolor': colors_palette["background_grey"],
 				'margin': dict(l=5, r=5, b=1, t=30),
 				'xaxis': {'automargin': True},
 				'yaxis': yaxis}
@@ -339,32 +339,92 @@ table_confirmed = produce_table(new_confirmed_cases, 'table_confirmed')
 table_deaths = produce_table(new_confirmed_deaths, 'table_deaths')
 
 graph1_total = graph_totals_tab(total_confirmed, False, 'graph11', 
-									dict(mode='lines', line=dict(color=colors_pallette["pastel_blue"],
+									dict(mode='lines', line=dict(color=colors_palette["pastel_blue"],
 										width=6)), 
 									produce_layout_dict("Total Confirmed Cases", False))
 
 graph1_log_total = graph_totals_tab(total_confirmed, False, 'graph11_log', 
-									dict(mode='lines', line=dict(color=colors_pallette["pastel_blue"],
+									dict(mode='lines', line=dict(color=colors_palette["pastel_blue"],
 										width=6)), 
 									produce_layout_dict("Total Confirmed Cases", True))
 
 graph1_new_total = graph_totals_tab(new_total_cases, True, 'graph11_new', 
-									dict(type='bar', marker=dict(color=colors_pallette["pastel_blue"])), 
+									dict(type='bar', marker=dict(color=colors_palette["pastel_blue"])), 
 									produce_layout_dict("New Confirmed Cases", False))
 
 graph2_total = graph_totals_tab(total_deaths, False, "graph12", 
-									dict(mode='lines', line=dict(color=colors_pallette["pastel_red"],
+									dict(mode='lines', line=dict(color=colors_palette["pastel_red"],
 										width=6)),
 									produce_layout_dict("Total Deaths", False))
 
 graph2_log_total = graph_totals_tab(total_deaths, False, 'graph12_log',  
-									dict(mode='lines', line=dict(color=colors_pallette["pastel_red"],
+									dict(mode='lines', line=dict(color=colors_palette["pastel_red"],
 										width=6)), 
 									produce_layout_dict("Total Deaths", True))
 
 graph2_new_total = graph_totals_tab(new_total_deaths, True, "graph12_new", 
-									dict(type='bar', marker=dict(color=colors_pallette["pastel_red"])),
+									dict(type='bar', marker=dict(color=colors_palette["pastel_red"])),
 									produce_layout_dict("New Deaths", False))
+
+
+# ===== Map =====
+
+def map_data_df(confirmed_cases_df, confirmed_deaths_df, country_coords):
+	new_conf_c = confirmed_cases_df.copy()
+	new_conf_c = new_conf_c.rename(columns={"Country": "country"})
+	new_conf_d = confirmed_deaths_df.copy()
+	new_conf_d = new_conf_d.rename(columns={"Country": "country"})
+
+	df_map = pd.merge(pd.merge(new_conf_c, new_conf_d, on='country'), country_coords,on='country')
+	df_map["total_cases_string"] = df_map['Total Cases'].astype("int").apply(lambda x: '{:,}'.format(x))
+	df_map["new_cases_string"] = df_map['New Cases'].astype("int").apply(lambda x: '{:,}'.format(x))
+	df_map["total_deaths_string"] = df_map['Total Deaths'].astype("int").apply(lambda x: '{:,}'.format(x))
+	df_map["new_deaths_string"] = df_map['New Deaths'].astype("int").apply(lambda x: '{:,}'.format(x))
+
+	df_map['text'] = df_map['country'] + '<br>Total Cases: ' + df_map['total_cases_string'] + \
+					'<br>New Cases: ' + df_map['new_cases_string'] +\
+					'<br>Total Deaths: ' + df_map['total_deaths_string'] + \
+					'<br>New Deaths: ' + df_map['new_deaths_string']
+
+	# Manually fixing wrong coordinates
+	df_map.loc[df_map["country"]=="Australia", ["Lat", "Long"]] = [-25.2744, 133.7751]
+	df_map.loc[df_map["country"]=="Netherlands", ["Lat", "Long"]] = [52.1326, 5.2913]
+	df_map.loc[df_map["country"]=="Canada", ["Lat", "Long"]] = [56.1304, -106.3468]
+	df_map.loc[df_map["country"]=="China", ["Lat", "Long"]] = [35.8617, 104.1954]
+	df_map.loc[df_map["country"]=="Denmark", ["Lat", "Long"]] = [56.2639, 9.5018]
+	df_map.loc[df_map["country"]=="France", ["Lat", "Long"]] = [46.2276, 2.2137]
+	df_map.loc[df_map["country"]=="United Kingdom", ["Lat", "Long"]] = [55.3781, -3.4360]
+
+	return df_map
+
+
+map_df = map_data_df(new_confirmed_cases, new_confirmed_deaths, country_coords)
+
+graph_map = dcc.Graph(figure={'data': [dict(
+								type="scattergeo",
+								lon = map_df['Long'],
+								lat = map_df['Lat'],
+								text = map_df["text"],
+								mode = 'markers',
+								marker = dict(
+									size = list(map_df['Total Cases']/50 + 30),
+									color=colors_palette["pastel_blue"],
+									line_width=0.5,
+									sizemode = 'area')
+									)],
+							'layout': dict(geo=dict(
+									visible=True, resolution=110,
+									showcountries=True, 
+									countrycolor="black", 
+									projection_type="mercator"),
+									margin={"r":0,"t":0,"l":0,"b":0},
+									paper_bgcolor=colors_palette["background_grey"],
+									plot_bgcolor=colors_palette["background_grey"],
+									hoverlabel=dict(font={
+										'size': 16,
+										'color': "white"}
+									   	))},
+						style={"height": '75vh'})
 
 
 # ===== Layout =====
@@ -395,7 +455,7 @@ app.layout = html.Div([
 												'font-size': '2.8vw',
 												'fontWeight': 'bold',
 												'margin-top': '-0.8rem',
-												'color': colors_pallette["pastel_blue"]})
+												'color': colors_palette["pastel_blue"]})
 									],
 									style={'textAlign': 'center'},														
 									className="pretty_container",
@@ -420,7 +480,7 @@ app.layout = html.Div([
 													'font-size': '2.8vw',
 													'fontWeight': 'bold',
 													'margin-top': '-0.8rem',
-													'color': colors_pallette["pastel_red"]})
+													'color': colors_palette["pastel_red"]})
 										],
 										style={'textAlign': 'center'},
 										className="pretty_container"),
@@ -476,6 +536,28 @@ app.layout = html.Div([
 									], className="six columns"),
 
 						], className="pretty_container"),
+					
+
+					dcc.Tab(id="map", label='Map', 
+						children=[		
+				
+							html.Div([graph_map],
+									id='graph_map',
+									className="pretty_container",
+									style={'height': '75vh'}),
+							
+							html.Div([
+								html.P("""This tab shows a map of the countries affected by COVID-19. \
+									The size of the bubble is proportional to the total cases \
+									of the country. """
+									)],		
+									style={'textAlign': 'center',
+											'margin-left': '30%',
+											'margin-right': '30%'},
+									),
+
+							], className="pretty_container"),
+
 					
 					dcc.Tab(id="country_overview", label='Country Overview', 
 						children=[
@@ -651,8 +733,8 @@ def update_graphs_countries(country_sel):
 		graph3_df = new_conf_country_df(confirmed, country_sel)
 		graph4_df = new_conf_country_df(deaths, country_sel)
 
-		common_layout = {'paper_bgcolor': colors_pallette["background_grey"],
-							'plot_bgcolor': colors_pallette["background_grey"],
+		common_layout = {'paper_bgcolor': colors_palette["background_grey"],
+							'plot_bgcolor': colors_palette["background_grey"],
 							'margin': dict(l=5, r=5, b=1, t=30),
 							'xaxis': {'automargin': True}}
 
@@ -674,23 +756,23 @@ def update_graphs_countries(country_sel):
 		graph4_layout = dict(list(common_layout.items()) + list(graph4_layout.items()))
 
 		graph1 = {'data': [dict(x=graph1_df["date"], y=graph1_df["country"],
-					mode='lines+markers', line=dict(color=colors_pallette["pastel_blue"],
-						width= 2), marker=dict(color=colors_pallette["pastel_blue"],
+					mode='lines+markers', line=dict(color=colors_palette["pastel_blue"],
+						width= 2), marker=dict(color=colors_palette["pastel_blue"],
 						size= 8))],
 					'layout': graph1_layout}
 
 		graph2 = {'data': [dict(x=graph2_df["date"], y=graph2_df["country"],
-					mode='lines+markers', line=dict(color=colors_pallette["pastel_red"],
-						width= 2), marker=dict(color=colors_pallette["pastel_red"],
+					mode='lines+markers', line=dict(color=colors_palette["pastel_red"],
+						width= 2), marker=dict(color=colors_palette["pastel_red"],
 						size= 8))],
 					'layout': graph2_layout}
 
 		graph3 = {'data': [dict(x=graph3_df["date"], y=graph3_df["new"],
-					type='bar', marker=dict(color=colors_pallette["pastel_blue"]))],
+					type='bar', marker=dict(color=colors_palette["pastel_blue"]))],
 					'layout': graph3_layout}
 
 		graph4 = {'data': [dict(x=graph4_df["date"], y=graph4_df["new"],
-					type='bar', marker=dict(color=colors_pallette["pastel_red"]))],
+					type='bar', marker=dict(color=colors_palette["pastel_red"]))],
 					'layout': graph4_layout}
 		
 		return graph1, graph2, graph3, graph4
@@ -768,8 +850,8 @@ def update_graph1_country_prediction(country_1):
 	return {
 		'data': data,
 		'layout': dict(title=title_name,
-						paper_bgcolor=colors_pallette["background_grey"],
-						plot_bgcolor=colors_pallette["background_grey"],)}
+						paper_bgcolor=colors_palette["background_grey"],
+						plot_bgcolor=colors_palette["background_grey"],)}
 
 
 # ===== Country Comparison tab callbacks =====
@@ -816,8 +898,8 @@ def update_graph1_comparison(country_1, country_2):
 	return {
 		'data': data,
 		'layout': dict(yaxis={'type': 'log'},
-						paper_bgcolor=colors_pallette["background_grey"],
-						plot_bgcolor=colors_pallette["background_grey"],
+						paper_bgcolor=colors_palette["background_grey"],
+						plot_bgcolor=colors_palette["background_grey"],
 						title=title_name)}
 
 @app.callback(
@@ -862,8 +944,8 @@ def update_graph2_comparison(country_1, country_2):
 	return {
 		'data': data,
 		'layout': dict(yaxis={'type': 'log'},
-						paper_bgcolor=colors_pallette["background_grey"],
-						plot_bgcolor=colors_pallette["background_grey"],
+						paper_bgcolor=colors_palette["background_grey"],
+						plot_bgcolor=colors_palette["background_grey"],
 						title=title_name)}
 
 
