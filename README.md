@@ -10,11 +10,15 @@ The app is deployed on [Heroku](https://www.heroku.com/) using free dynos, so it
 
 
 ### Tabs
-The dashboard includes 4 tabs:
+The dashboard includes 5 tabs:
 
 * Total Overview
 
     An overview of the total cases and deaths worldwide with the relevant graphs.
+
+* Map
+
+    This tab shows a map of the countries affected by COVID-19. The size of the bubble is proportional to the total cases of the country.
 
 * Country Overview
 
