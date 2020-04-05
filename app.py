@@ -150,8 +150,8 @@ def fit_func(xdata, ydata):
 		pred = log_func(xdata, *popt)
 		flag = "log"
 		perr = np.sqrt(np.diag(pcov))
-		low_popt = popt - perr
-		high_popt = popt + perr
+		low_popt = popt - np.array([perr[0], -perr[1], perr[2]])
+		high_popt = popt + np.array([perr[0], -perr[1], perr[2]])
 
 	except:
 		try:
@@ -413,8 +413,7 @@ graph_map = dcc.Graph(figure={'data': [dict(
 									sizemode = 'area')
 									)],
 							'layout': dict(geo=dict(
-									visible=True, 
-									resolution=110,
+									visible=True, resolution=110,
 									showcountries=True, 
 									countrycolor="black", 
 									projection_type="mercator"),
