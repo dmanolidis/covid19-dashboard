@@ -2,7 +2,7 @@
 
 This dashboard monitors the development of the COVID-19 outbreak. The dashboard is live [here](https://test-dash-dman.herokuapp.com/).
 
-The data comes from [Johns Hopkins CSSE data repository](https://github.com/CSSEGISandData/COVID-19).
+The data comes from [Johns Hopkins CSSE data repository](https://github.com/CSSEGISandData/COVID-19). Furthermore, data about country death rates and population comes from [World Bank: Death Rate](https://data.worldbank.org/indicator/sp.dyn.cdrt.in) and [World Bank: Population](https://data.worldbank.org/indicator/SP.POP.TOTL) data sets, respectively.
 
 The dashboard was created using Python and [Dash](https://dash.plotly.com/). Some of the css components are taken from this [app](https://github.com/plotly/dash-sample-apps/tree/master/apps/dash-oil-and-gas).
 

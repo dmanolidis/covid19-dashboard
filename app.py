@@ -243,6 +243,10 @@ death_raw = pd.read_sql_table('deaths', engine, index_col=0)
 # Transform data
 deaths = transform_export_countries_df(death_raw)
 
+# Population/Death Rate data
+# Read data from file
+death_rate_pop = pd.read_csv('death_rate_pop.csv', index_col=0)
+
 
 # Totals
 total_confirmed = total_confirmed_df(confirmed)
@@ -339,31 +343,37 @@ table_confirmed = produce_table(new_confirmed_cases, 'table_confirmed')
 table_deaths = produce_table(new_confirmed_deaths, 'table_deaths')
 
 graph1_total = graph_totals_tab(total_confirmed, False, 'graph11', 
-									dict(mode='lines', line=dict(color=colors_palette["pastel_blue"],
+									dict(mode='lines', 
+										line=dict(color=colors_palette["pastel_blue"],
 										width=6)), 
 									produce_layout_dict("Total Confirmed Cases", False))
 
 graph1_log_total = graph_totals_tab(total_confirmed, False, 'graph11_log', 
-									dict(mode='lines', line=dict(color=colors_palette["pastel_blue"],
+									dict(mode='lines', 
+										line=dict(color=colors_palette["pastel_blue"],
 										width=6)), 
 									produce_layout_dict("Total Confirmed Cases", True))
 
 graph1_new_total = graph_totals_tab(new_total_cases, True, 'graph11_new', 
-									dict(type='bar', marker=dict(color=colors_palette["pastel_blue"])), 
+									dict(type='bar', 
+										marker=dict(color=colors_palette["pastel_blue"])), 
 									produce_layout_dict("New Confirmed Cases", False))
 
 graph2_total = graph_totals_tab(total_deaths, False, "graph12", 
-									dict(mode='lines', line=dict(color=colors_palette["pastel_red"],
+									dict(mode='lines', 
+										line=dict(color=colors_palette["pastel_red"],
 										width=6)),
 									produce_layout_dict("Total Deaths", False))
 
 graph2_log_total = graph_totals_tab(total_deaths, False, 'graph12_log',  
-									dict(mode='lines', line=dict(color=colors_palette["pastel_red"],
+									dict(mode='lines', 
+										line=dict(color=colors_palette["pastel_red"],
 										width=6)), 
 									produce_layout_dict("Total Deaths", True))
 
 graph2_new_total = graph_totals_tab(new_total_deaths, True, "graph12_new", 
-									dict(type='bar', marker=dict(color=colors_palette["pastel_red"])),
+									dict(type='bar', 
+										marker=dict(color=colors_palette["pastel_red"])),
 									produce_layout_dict("New Deaths", False))
 
 
@@ -375,11 +385,16 @@ def map_data_df(confirmed_cases_df, confirmed_deaths_df, country_coords):
 	new_conf_d = confirmed_deaths_df.copy()
 	new_conf_d = new_conf_d.rename(columns={"Country": "country"})
 
-	df_map = pd.merge(pd.merge(new_conf_c, new_conf_d, on='country'), country_coords,on='country')
-	df_map["total_cases_string"] = df_map['Total Cases'].astype("int").apply(lambda x: '{:,}'.format(x))
-	df_map["new_cases_string"] = df_map['New Cases'].astype("int").apply(lambda x: '{:,}'.format(x))
-	df_map["total_deaths_string"] = df_map['Total Deaths'].astype("int").apply(lambda x: '{:,}'.format(x))
-	df_map["new_deaths_string"] = df_map['New Deaths'].astype("int").apply(lambda x: '{:,}'.format(x))
+	df_map = pd.merge(pd.merge(new_conf_c, new_conf_d, on='country'), 
+								country_coords,on='country')
+	df_map["total_cases_string"] = df_map['Total Cases'].astype("int").apply(\
+															lambda x: '{:,}'.format(x))
+	df_map["new_cases_string"] = df_map['New Cases'].astype("int").apply(\
+															lambda x: '{:,}'.format(x))
+	df_map["total_deaths_string"] = df_map['Total Deaths'].astype("int").apply(\
+															lambda x: '{:,}'.format(x))
+	df_map["new_deaths_string"] = df_map['New Deaths'].astype("int").apply(\
+															lambda x: '{:,}'.format(x))
 
 	df_map['text'] = df_map['country'] + '<br>Total Cases: ' + df_map['total_cases_string'] + \
 					'<br>New Cases: ' + df_map['new_cases_string'] +\
@@ -427,6 +442,57 @@ graph_map = dcc.Graph(figure={'data': [dict(
 						style={"height": '75vh'})
 
 
+# ===== Styles =====
+
+
+style_bottom_text = {'textAlign': 'justify', 
+						'margin-left': '30%', 
+						'margin-right': '30%'}
+
+style_blue = {'font-family': "Arial",
+				'font-size': '2.8vw',
+				'fontWeight': 'bold',
+				'margin-top': '-0.8rem',
+				'color': colors_palette["pastel_blue"]}
+
+style_red = {'font-family': "Arial",
+				'font-size': '2.8vw',
+				'fontWeight': 'bold',
+				'margin-top': '-0.8rem',
+				'color': colors_palette["pastel_red"]}
+
+style_label = {"margin-bottom": "0rem",
+				'margin-top': '0.4rem'}
+
+style_blue_country = {'font-family': "Arial",
+						'font-size': '2.2vw',
+						'fontWeight': 'bold',
+						'margin-top': '-0.8rem',
+						'margin-bottom': '0.4rem',
+						'color': colors_palette["pastel_blue"]}
+
+style_red_country = {'font-family': "Arial",
+						'font-size': '2.2vw',
+						'fontWeight': 'bold',
+						'margin-top': '-0.8rem',
+						'margin-bottom': '0.4rem',
+						'color': colors_palette["pastel_red"]}
+
+style_grey_country = {'font-family': "Arial",
+						'font-size': '2.2vw',
+						'fontWeight': 'bold',
+						'margin-top': '-0.8rem',
+						'margin-bottom': '0.4rem',
+						'color': "grey"}
+
+style_container_country_overview = {'textAlign': 'center', 
+										'width': '23.625%'}
+
+style_graph_country_overview = {'width': '47.5%', 'height': '35vh'}
+
+style_graph_country_comparison = {'width': '47.5%', 'height': '75vh'}
+
+
 # ===== Layout =====
 
 app.layout = html.Div([
@@ -451,11 +517,7 @@ app.layout = html.Div([
 									html.H6("Total Confirmed Cases",
 										style={"margin-bottom": "0rem"}),
 									html.H1(world_total_confirmed, 
-										style={'font-family': "Arial",
-												'font-size': '2.8vw',
-												'fontWeight': 'bold',
-												'margin-top': '-0.8rem',
-												'color': colors_palette["pastel_blue"]})
+										style=style_blue)
 									],
 									style={'textAlign': 'center'},														
 									className="pretty_container",
@@ -476,11 +538,7 @@ app.layout = html.Div([
 										html.H6("Total Deaths",
 											style={"margin-bottom": "0rem"}),
 										html.H1(world_total_deaths, 
-											style={'font-family': "Arial",
-													'font-size': '2.8vw',
-													'fontWeight': 'bold',
-													'margin-top': '-0.8rem',
-													'color': colors_palette["pastel_red"]})
+											style=style_red)
 										],
 										style={'textAlign': 'center'},
 										className="pretty_container"),
@@ -547,14 +605,10 @@ app.layout = html.Div([
 									style={'height': '75vh'}),
 							
 							html.Div([
-								html.P("""This tab shows a map of the countries affected by COVID-19. \
-									The size of the bubble is proportional to the total cases \
-									of the country. """
-									)],		
-									style={'textAlign': 'center',
-											'margin-left': '30%',
-											'margin-right': '30%'},
-									),
+								html.P("""This tab shows a map of the countries affected by \
+									COVID-19. The size of the bubble is proportional to the total \
+									cases of the country. """
+									)],	style=style_bottom_text)
 
 							], className="pretty_container"),
 
@@ -575,37 +629,118 @@ app.layout = html.Div([
 									),
 				
 								html.Div([
+									html.Div([
+										html.H6("Total Confirmed Cases",
+											style=style_label),
+										html.H1(id='total_confirmed_country', 
+											style=style_blue_country)
+										],
+										style=style_container_country_overview,														
+										className="pretty_container"),
+
+									html.Div([
+										html.H6("New Confirmed Cases",
+											style=style_label),
+										html.H1(id='new_confirmed_country', 
+											style=style_blue_country)
+										],
+										style=style_container_country_overview,														
+										className="pretty_container"),
+
+									html.Div([
+										html.H6("Total Deaths",
+											style=style_label),
+										html.H1(id='deaths_country', 
+											style=style_red_country)
+										],
+										style=style_container_country_overview,														
+										className="pretty_container"),
+
+									
+									html.Div([
+										html.H6("New Deaths",
+											style=style_label),
+										html.H1(id='new_deaths_country', 
+											style=style_red_country)
+										],
+										style=style_container_country_overview,														
+										className="pretty_container")
+
+									], className="row flex-display"),
+
+
+								html.Div([
+									html.Div([
+										html.H6("Total Confirmed Cases per Million",
+											style=style_label),
+										html.H1(id='total_confirmed_country_pop', 
+											style=style_grey_country)
+										],
+										style=style_container_country_overview,														
+										className="pretty_container"),
+
+									html.Div([
+										html.H6("Total Deaths per Million",
+											style=style_label),
+										html.H1(id='deaths_country_pop', 
+											style=style_grey_country)
+										],
+										style=style_container_country_overview,														
+										className="pretty_container"),
+
+									html.Div([
+										html.H6("Average deaths per day before the outbreak",
+											style=style_label),
+										html.H1(id='country_drpop', 
+											style=style_grey_country)
+										],
+										style=style_container_country_overview,														
+										className="pretty_container"),
+
+									
+									html.Div([
+										html.H6("Percent increase of deaths due to COVID-19",
+											style=style_label),
+										html.H1(id='death_rate_country_pop',
+											style=style_grey_country)
+										],
+										style=style_container_country_overview,														
+										className="pretty_container")
+
+									], className="row flex-display"),
+
+								html.Div([
 									dcc.Graph(id='graph1_country',
 										className="pretty_container",
-										style={'width': '47.5%', 'height': '35vh'}),
+										style=style_graph_country_overview),
 								
 									dcc.Graph(id='graph2_country',
 										className="pretty_container",
-										style={'width': '47.5%', 'height': '35vh'}),
+										style=style_graph_country_overview),
 									], className="row flex-display"),
 
 								html.Div([
 									dcc.Graph(id='graph3_country',
 										className="pretty_container",
-										style={'width': '47.5%', 'height': '35vh'}),
+										style=style_graph_country_overview),
 								
 									dcc.Graph(id='graph4_country',
 										className="pretty_container",
-										style={'width': '47.5%', 'height': '35vh'}),
+										style=style_graph_country_overview),
 									
 									], className="row flex-display")
 
 								]),
 
 							html.Div([
-								html.P("This tab shows an overview of the confirmed \
-									cases and deaths of the selected country. Only countries \
-									with at least one confirmed case and one death are shown.")],
-											
-									style={'textAlign': 'center',
-											'margin-left': '30%',
-											'margin-right': '30%'},														
-								),
+								dcc.Markdown("This tab shows an overview of the confirmed \
+									cases and deaths of the selected country. Furthermore, the \
+									average number of deaths per day before the COVID-19 outbreak \
+									is shown. This is an estimation based on the latest data from \
+									the [World Bank Group](https://www.worldbank.org/). Only \
+									countries with at least one confirmed \
+									case and one death are shown.")											
+									], style=style_bottom_text)
 
 							], className="pretty_container"),
 					
@@ -632,19 +767,15 @@ app.layout = html.Div([
 							html.Div([
 								html.P("""This tab shows a prediction for the confirmed \
 									cases of the selected country. The model used is very simple, \
-									not taking into account many factors that can affect the development \
-									of the disease, thus, its predicting capability is limited. \
-									The prediction starts on the first day the selected country \
-									had more than 100 total cases. A logistic curve is fit to \
-									the data. If that is not possible (usually that means \
+									not taking into account many factors that can affect the \
+									development of the disease, thus, its predicting capability \
+									is limited. The prediction starts on the first day the selected \
+									country had more than 100 total cases. A logistic curve is fit \
+									to the data. If that is not possible (usually that means \
 									that the country is on the early stage of exponential \
 									growth), an exponential curve is fit to the data. \
 									Confidence intervals are also shown."""
-									)],		
-									style={'textAlign': 'center',
-											'margin-left': '30%',
-											'margin-right': '30%'},
-									),
+									)],	style=style_bottom_text)
 
 							], className="pretty_container"),
 					
@@ -675,11 +806,11 @@ app.layout = html.Div([
 							html.Div([
 								dcc.Graph(id='graph1_comparison',
 									className="pretty_container",
-									style={'width': '47.5%', 'height': '75vh'}),
+									style=style_graph_country_comparison),
 							
 								dcc.Graph(id='graph2_comparison',
 									className="pretty_container",
-									style={'width': '47.5%', 'height': '75vh'})
+									style=style_graph_country_comparison)
 								
 								], className="row flex-display"),
 							
@@ -689,25 +820,24 @@ app.layout = html.Div([
 									had more than 100 cases and the first day they had their first \
 									death, respectively. Only countries with more than 100 cases and \
 									at least one death are shown.")
-									], style={'textAlign': 'center',
-											'margin-left': '30%',
-											'margin-right': '30%'},														
-									),
+									], style=style_bottom_text)
 
 						], className="pretty_container")
 					
 					], style={'fontSize': 20,
-						'font-family': "Arial"},
+						'font-family': "Arial",
+						'margin-bottom': '0px'},
 						id="tabs"					
 					),
 				
 				html.Div([
 					dcc.Markdown("""
-					[Data by John Hopkins CSSE](https://github.com/CSSEGISandData/COVID-19) | \
+					Data by [John Hopkins CSSE](https://github.com/CSSEGISandData/COVID-19), \
+					[World Bank](https://data.worldbank.org/indicator/sp.dyn.cdrt.in) | \
 					[Code](https://github.com/dmanolidis/covid19-dashboard) \
 					| Developed by Dimitris Manolidis
 					""", style={'textAlign': 'center',
-								'margin-top': '20px',
+								'margin-top': '0px',
 								'margin-left': '30%',
 								'margin-right': '30%'},
 						id="about")
@@ -716,6 +846,64 @@ app.layout = html.Div([
 
 
 # ===== Country Overview tab callbacks =====
+
+@app.callback(
+	[Output('total_confirmed_country', 'children'),
+	 Output('new_confirmed_country', 'children'),
+	 Output('deaths_country', 'children'),
+	 Output('new_deaths_country', 'children'),
+	 Output('total_confirmed_country_pop', 'children'),
+	 Output('deaths_country_pop', 'children'),
+	 Output('death_rate_country_pop', 'children'),
+	 Output('country_drpop', 'children')],
+	[Input('country_sel', 'value')])
+
+
+def update_graphs_countries(country_sel):
+	total_conf_country = conf_country_df(confirmed, country_sel, 0, True)
+	total_deaths_country = death_country_df(deaths, country_sel, True)
+	new_conf_country = new_conf_country_df(confirmed, country_sel)
+	new_deaths_country = new_conf_country_df(deaths, country_sel)
+
+	try:
+		pop = death_rate_pop.loc[country_sel, "population"]
+		drpop = death_rate_pop.loc[country_sel, "death_rate_pop"]
+		pop_flag = True
+
+	except:
+		pop = np.nan
+		drpop = np.nan
+		pop_flag = False
+
+	conf_cases = total_conf_country.iloc[-1,1].astype("int")
+	conf_cases_str = '{:,}'.format(conf_cases)
+	tot_deaths = total_deaths_country.iloc[-1,1].astype("int")
+	tot_deaths_str = '{:,}'.format(tot_deaths)
+	new_conf_cases = new_conf_country.iloc[-1,1].astype("int")
+	new_conf_cases_str = '{:,}'.format(new_conf_cases)
+	new_deaths = new_deaths_country.iloc[-1,1].astype("int")
+	new_deaths_str = '{:,}'.format(new_deaths)
+
+	if pop_flag:
+		conf_cases_pop = conf_cases/pop*1000000
+		conf_cases_pop_str = '{:,}'.format(int(round(conf_cases_pop)))
+		tot_deaths_pop = tot_deaths/pop*1000000
+		tot_deaths_pop_str = '{:.2f}'.format(round(tot_deaths_pop, 2))
+		perc_death_rate_pop = new_deaths/drpop*100
+		perc_death_rate_pop_str = '{:.2f}'.format(perc_death_rate_pop) + "%"
+		drpop_str = '{:,}'.format(int(round(drpop)))
+
+	else:
+		conf_cases_pop_str = 'Not available'
+		tot_deaths_pop_str = 'Not available'
+		perc_death_rate_pop_str = 'Not available'
+		drpop_str = 'Not available'
+
+
+
+	return conf_cases_str, new_conf_cases_str, tot_deaths_str, new_deaths_str, \
+					conf_cases_pop_str, tot_deaths_pop_str, perc_death_rate_pop_str, drpop_str
+
 
 @app.callback(
 	[Output('graph1_country', 'figure'),
@@ -901,6 +1089,7 @@ def update_graph1_comparison(country_1, country_2):
 						paper_bgcolor=colors_palette["background_grey"],
 						plot_bgcolor=colors_palette["background_grey"],
 						title=title_name)}
+
 
 @app.callback(
 	Output('graph2_comparison', 'figure'),
