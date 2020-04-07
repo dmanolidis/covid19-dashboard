@@ -312,13 +312,12 @@ def graph_totals_tab(df, new_flag, graph_id, feat_dict, layout_dict):
 		y = df["new"]
 	
 	data = {'x': df["date"], 'y': y}
-	data = dict(list(data.items()) + list(feat_dict.items()))
+	data.update(feat_dict)
 		
 	return dcc.Graph(id=graph_id,
 				figure={'data': [data],
 						'layout': layout_dict},
-				style={'height': '34vh'}
-				)
+				style={'height': '34vh'})
 
 
 def produce_layout_dict(title, log_flag):
@@ -335,6 +334,49 @@ def produce_layout_dict(title, log_flag):
 				'margin': dict(l=5, r=5, b=1, t=30),
 				'xaxis': {'automargin': True},
 				'yaxis': yaxis}
+
+
+# ===== Styles =====
+
+
+style_bottom_text = {'textAlign': 'justify', 
+						'margin-left': '30%', 
+						'margin-right': '30%'}
+
+style_blue = {'font-family': "Arial",
+				'font-size': '2.8vw',
+				'fontWeight': 'bold',
+				'margin-top': '-0.8rem',
+				'color': colors_palette["pastel_blue"]}
+
+style_red = {'font-family': "Arial",
+				'font-size': '2.8vw',
+				'fontWeight': 'bold',
+				'margin-top': '-0.8rem',
+				'color': colors_palette["pastel_red"]}
+
+style_label = {"margin-bottom": "0rem",
+				'margin-top': '0.4rem'}
+
+style_country = {'font-family': "Arial",
+						'font-size': '2.2vw',
+						'fontWeight': 'bold',
+						'margin-top': '-0.8rem',
+						'margin-bottom': '0.4rem'}
+
+style_blue_country = {'color': colors_palette["pastel_blue"]}
+style_blue_country.update(style_country)
+style_red_country = {'color': colors_palette["pastel_red"]}
+style_red_country.update(style_country)
+style_grey_country = {'color': "grey"}
+style_grey_country.update(style_country)
+
+style_container_country_overview = {'textAlign': 'center', 
+										'width': '23.625%'}
+
+style_graph_country_overview = {'width': '47.5%', 'height': '35vh'}
+
+style_graph_country_comparison = {'width': '47.5%', 'height': '75vh'}
 
 
 # ===== Total Overview tab tables and graphs =====
@@ -442,55 +484,20 @@ graph_map = dcc.Graph(figure={'data': [dict(
 						style={"height": '75vh'})
 
 
-# ===== Styles =====
+# ===== Country Overview =====
+
+def produce_country_overview_container(text, id_label, style1):
+	
+	return html.Div([html.H6(text, style=style_label),
+					html.H1(id=id_label, style=style1)],
+						style=style_container_country_overview,														
+						className="pretty_container")
 
 
-style_bottom_text = {'textAlign': 'justify', 
-						'margin-left': '30%', 
-						'margin-right': '30%'}
-
-style_blue = {'font-family': "Arial",
-				'font-size': '2.8vw',
-				'fontWeight': 'bold',
-				'margin-top': '-0.8rem',
-				'color': colors_palette["pastel_blue"]}
-
-style_red = {'font-family': "Arial",
-				'font-size': '2.8vw',
-				'fontWeight': 'bold',
-				'margin-top': '-0.8rem',
-				'color': colors_palette["pastel_red"]}
-
-style_label = {"margin-bottom": "0rem",
-				'margin-top': '0.4rem'}
-
-style_blue_country = {'font-family': "Arial",
-						'font-size': '2.2vw',
-						'fontWeight': 'bold',
-						'margin-top': '-0.8rem',
-						'margin-bottom': '0.4rem',
-						'color': colors_palette["pastel_blue"]}
-
-style_red_country = {'font-family': "Arial",
-						'font-size': '2.2vw',
-						'fontWeight': 'bold',
-						'margin-top': '-0.8rem',
-						'margin-bottom': '0.4rem',
-						'color': colors_palette["pastel_red"]}
-
-style_grey_country = {'font-family': "Arial",
-						'font-size': '2.2vw',
-						'fontWeight': 'bold',
-						'margin-top': '-0.8rem',
-						'margin-bottom': '0.4rem',
-						'color': "grey"}
-
-style_container_country_overview = {'textAlign': 'center', 
-										'width': '23.625%'}
-
-style_graph_country_overview = {'width': '47.5%', 'height': '35vh'}
-
-style_graph_country_comparison = {'width': '47.5%', 'height': '75vh'}
+def produce_country_overview_graph(id_label):
+	return dcc.Graph(id=id_label,
+						className="pretty_container",
+						style=style_graph_country_overview)
 
 
 # ===== Layout =====
@@ -629,105 +636,52 @@ app.layout = html.Div([
 									),
 				
 								html.Div([
-									html.Div([
-										html.H6("Total Confirmed Cases",
-											style=style_label),
-										html.H1(id='total_confirmed_country', 
-											style=style_blue_country)
-										],
-										style=style_container_country_overview,														
-										className="pretty_container"),
 
-									html.Div([
-										html.H6("New Confirmed Cases",
-											style=style_label),
-										html.H1(id='new_confirmed_country', 
-											style=style_blue_country)
-										],
-										style=style_container_country_overview,														
-										className="pretty_container"),
+									produce_country_overview_container("Total Confirmed Cases", 
+										'total_confirmed_country', style_blue_country),
 
-									html.Div([
-										html.H6("Total Deaths",
-											style=style_label),
-										html.H1(id='deaths_country', 
-											style=style_red_country)
-										],
-										style=style_container_country_overview,														
-										className="pretty_container"),
+									produce_country_overview_container("New Confirmed Cases", 
+										'new_confirmed_country', style_blue_country),
 
+									produce_country_overview_container("Total Deaths", 
+										'deaths_country', style_red_country),
+
+									produce_country_overview_container("New Deaths", 
+										'new_deaths_country', style_red_country)
 									
-									html.Div([
-										html.H6("New Deaths",
-											style=style_label),
-										html.H1(id='new_deaths_country', 
-											style=style_red_country)
-										],
-										style=style_container_country_overview,														
-										className="pretty_container")
-
 									], className="row flex-display"),
 
 
 								html.Div([
-									html.Div([
-										html.H6("Total Confirmed Cases per Million",
-											style=style_label),
-										html.H1(id='total_confirmed_country_pop', 
-											style=style_grey_country)
-										],
-										style=style_container_country_overview,														
-										className="pretty_container"),
 
-									html.Div([
-										html.H6("Total Deaths per Million",
-											style=style_label),
-										html.H1(id='deaths_country_pop', 
-											style=style_grey_country)
-										],
-										style=style_container_country_overview,														
-										className="pretty_container"),
+									produce_country_overview_container(
+										"Total Confirmed Cases per Million", 
+										'total_confirmed_country_pop', style_grey_country),
 
-									html.Div([
-										html.H6("Average deaths per day before the outbreak",
-											style=style_label),
-										html.H1(id='country_drpop', 
-											style=style_grey_country)
-										],
-										style=style_container_country_overview,														
-										className="pretty_container"),
+									produce_country_overview_container(
+										"Total Deaths per Million", 
+										'deaths_country_pop', style_grey_country),
 
-									
-									html.Div([
-										html.H6("Percent increase of deaths due to COVID-19",
-											style=style_label),
-										html.H1(id='death_rate_country_pop',
-											style=style_grey_country)
-										],
-										style=style_container_country_overview,														
-										className="pretty_container")
+									produce_country_overview_container(
+										"Average deaths per day before the outbreak", 
+										'country_drpop', style_grey_country),
+
+									produce_country_overview_container(
+										"Percent increase of deaths due to COVID-19", 
+										'death_rate_country_pop', style_grey_country)
 
 									], className="row flex-display"),
 
 								html.Div([
-									dcc.Graph(id='graph1_country',
-										className="pretty_container",
-										style=style_graph_country_overview),
-								
-									dcc.Graph(id='graph2_country',
-										className="pretty_container",
-										style=style_graph_country_overview),
+									produce_country_overview_graph('graph1_country'),
+									produce_country_overview_graph('graph2_country')
+
 									], className="row flex-display"),
 
 								html.Div([
-									dcc.Graph(id='graph3_country',
-										className="pretty_container",
-										style=style_graph_country_overview),
-								
-									dcc.Graph(id='graph4_country',
-										className="pretty_container",
-										style=style_graph_country_overview),
-									
+									produce_country_overview_graph('graph3_country'),
+									produce_country_overview_graph('graph4_country')
+
 									], className="row flex-display")
 
 								]),
@@ -858,7 +812,6 @@ app.layout = html.Div([
 	 Output('country_drpop', 'children')],
 	[Input('country_sel', 'value')])
 
-
 def update_graphs_countries(country_sel):
 	total_conf_country = conf_country_df(confirmed, country_sel, 0, True)
 	total_deaths_country = death_country_df(deaths, country_sel, True)
@@ -912,7 +865,6 @@ def update_graphs_countries(country_sel):
 	 Output('graph4_country', 'figure')],
 	[Input('country_sel', 'value')])
 
-
 def update_graphs_countries(country_sel):
 
 	if country_sel:
@@ -938,29 +890,29 @@ def update_graphs_countries(country_sel):
 		graph4_layout = {'title': {'text': "New Deaths", 'yanchor': 'top'},
 									'yaxis': {'automargin': True}}
 
-		graph1_layout = dict(list(common_layout.items()) + list(graph1_layout.items()))
-		graph2_layout = dict(list(common_layout.items()) + list(graph2_layout.items()))
-		graph3_layout = dict(list(common_layout.items()) + list(graph3_layout.items()))
-		graph4_layout = dict(list(common_layout.items()) + list(graph4_layout.items()))
+		graph1_layout.update(common_layout)
+		graph2_layout.update(common_layout)
+		graph3_layout.update(common_layout)
+		graph4_layout.update(common_layout)
 
 		graph1 = {'data': [dict(x=graph1_df["date"], y=graph1_df["country"],
-					mode='lines+markers', line=dict(color=colors_palette["pastel_blue"],
-						width= 2), marker=dict(color=colors_palette["pastel_blue"],
-						size= 8))],
+					mode='lines+markers', line=dict(color=colors_palette["pastel_blue"], width= 2), 
+					marker=dict(color=colors_palette["pastel_blue"], size= 8))],
 					'layout': graph1_layout}
 
 		graph2 = {'data': [dict(x=graph2_df["date"], y=graph2_df["country"],
-					mode='lines+markers', line=dict(color=colors_palette["pastel_red"],
-						width= 2), marker=dict(color=colors_palette["pastel_red"],
-						size= 8))],
+					mode='lines+markers', line=dict(color=colors_palette["pastel_red"], width= 2), 
+					marker=dict(color=colors_palette["pastel_red"], size= 8))],
 					'layout': graph2_layout}
 
 		graph3 = {'data': [dict(x=graph3_df["date"], y=graph3_df["new"],
-					type='bar', marker=dict(color=colors_palette["pastel_blue"]))],
+					type='bar', 
+					marker=dict(color=colors_palette["pastel_blue"]))],
 					'layout': graph3_layout}
 
 		graph4 = {'data': [dict(x=graph4_df["date"], y=graph4_df["new"],
-					type='bar', marker=dict(color=colors_palette["pastel_red"]))],
+					type='bar', 
+					marker=dict(color=colors_palette["pastel_red"]))],
 					'layout': graph4_layout}
 		
 		return graph1, graph2, graph3, graph4
@@ -977,7 +929,6 @@ def update_graphs_countries(country_sel):
 @app.callback(
 	Output('graph1_country_prediction', 'figure'),
 	[Input('country_sel_prediction', 'value')])
-
 
 def update_graph1_country_prediction(country_1):
 
@@ -1045,97 +996,75 @@ def update_graph1_country_prediction(country_1):
 # ===== Country Comparison tab callbacks =====
 
 @app.callback(
-	Output('graph1_comparison', 'figure'),
+	[Output('graph1_comparison', 'figure'),
+	Output('graph2_comparison', 'figure')],
 	[Input('country1', 'value'),
 	Input('country2', 'value')])
-
 
 def update_graph1_comparison(country_1, country_2):
-	if country_1 and country_2:
-		c1 = conf_country_df(confirmed_more_100, country_1, 100, False)
-		c2 = conf_country_df(confirmed_more_100, country_2, 100, False)
-		data1 = dict(x=c1["days"], y=c1["country"], name=country_1, mode='lines+markers',
-						line={'width': 2},
-						marker={'size': 8}) 
-		data2 = dict(x=c2["days"], y=c2["country"], name=country_2, mode='lines+markers',
+	common_data = dict(mode='lines+markers',
 						line={'width': 2},
 						marker={'size': 8})
-		data = [data1, data2]
-		title_name = "Confirmed Cases:   " + country_1 + " vs " + country_2
+	
+	def produce_data(df, name_label):
+		data = dict(x=df["days"], y=df["country"], name=name_label)
+		data.update(common_data)
+		return data
+
+	if country_1 and country_2:
+		c1_conf = conf_country_df(confirmed_more_100, country_1, 100, False)
+		c2_conf = conf_country_df(confirmed_more_100, country_2, 100, False)
+		data1 = produce_data(c1_conf, country_1)
+		data2 = produce_data(c2_conf, country_2)
+		data_conf = [data1, data2]
+		title_name_conf = "Confirmed Cases:   " + country_1 + " vs " + country_2
+
+		c1_death = death_country_df(deaths, country_1, False)
+		c2_death = death_country_df(deaths, country_2, False)
+		data1 = produce_data(c1_death, country_1)
+		data2 = produce_data(c2_death, country_2)
+		data_death = [data1, data2]
+		title_name_death = "Deaths:   " + country_1 + " vs " + country_2
 	
 	elif country_1:
-		c1 = conf_country_df(confirmed_more_100, country_1, 100, False)
-		data1 = dict(x=c1["days"], y=c1["country"], name=country_1, mode='lines+markers',
-						line={'width': 2},
-						marker={'size': 8})
-		data = [data1]
-		title_name = "Confirmed Cases:   " + country_1
+		c1_conf = conf_country_df(confirmed_more_100, country_1, 100, False)
+		data1 = produce_data(c1_conf, country_1)
+		data_conf = [data1]
+		title_name_conf = "Confirmed Cases:   " + country_1
+
+		c1_death = death_country_df(deaths, country_1, False)
+		data1 = produce_data(c1_death, country_1)
+		data_death = [data1]
+		title_name_death = "Deaths:   " + country_1
 	
 	elif country_2:
-		c2 = conf_country_df(confirmed_more_100, country_2, 100, False)
-		data2 = dict(x=c2["days"], y=c2["country"], name=country_2, mode='lines+markers',
-						line={'width': 2},
-						marker={'size': 8})
-		data = [data2]
-		title_name = "Confirmed Cases:   " + country_2
+		c2_conf = conf_country_df(confirmed_more_100, country_2, 100, False)
+		data2 = produce_data(c2_conf, country_2)
+		data_conf = [data2]
+		title_name_conf = "Confirmed Cases:   " + country_2
+
+		c2_death = death_country_df(deaths, country_2, False)
+		data2 = produce_data(c2_death, country_2)
+		data_death = [data2]
+		title_name_death = "Deaths:   " + country_2
 	
 	else:
-		data = [dict(x=[], y=[], mode='lines+markers')]
-		title_name = ""
+		data_conf = [dict(x=[], y=[], mode='lines+markers')]
+		title_name_conf = ""
+
+		data_death = [dict(x=[], y=[], mode='lines+markers')]
+		title_name_death = ""
 		
-	return {
-		'data': data,
-		'layout': dict(yaxis={'type': 'log'},
+	return {'data': data_conf,
+			'layout': dict(yaxis={'type': 'log'},
 						paper_bgcolor=colors_palette["background_grey"],
 						plot_bgcolor=colors_palette["background_grey"],
-						title=title_name)}
-
-
-@app.callback(
-	Output('graph2_comparison', 'figure'),
-	[Input('country1', 'value'),
-	Input('country2', 'value')])
-
-
-def update_graph2_comparison(country_1, country_2):
-	if country_1 and country_2:
-		c1 = death_country_df(deaths, country_1, False)
-		c2 = death_country_df(deaths, country_2, False)
-		data1 = dict(x=c1["days"], y=c1["country"], name=country_1, mode='lines+markers',
-						line={'width': 2},
-						marker={'size': 8}) 
-		data2 = dict(x=c2["days"], y=c2["country"], name=country_2, mode='lines+markers',
-						line={'width': 2},
-						marker={'size': 8})
-		data = [data1, data2]
-		title_name = "Deaths:   " + country_1 + " vs " + country_2
-	
-	elif country_1:
-		c1 = death_country_df(deaths, country_1, False)
-		data1 = dict(x=c1["days"], y=c1["country"], name=country_1, mode='lines+markers',
-						line={'width': 2},
-						marker={'size': 8})
-		data = [data1]
-		title_name = "Deaths:   " + country_1
-	
-	elif country_2:
-		c2 = death_country_df(deaths, country_2, False)
-		data2 = dict(x=c2["days"], y=c2["country"], name=country_2, mode='lines+markers',
-						line={'width': 2},
-						marker={'size': 8})
-		data = [data2]
-		title_name = "Deaths:   " + country_2
-	
-	else:
-		data = [dict(x=[], y=[], mode='lines+markers')]
-		title_name = ""
-		
-	return {
-		'data': data,
-		'layout': dict(yaxis={'type': 'log'},
+						title=title_name_conf)},\
+			{'data': data_death,
+			'layout': dict(yaxis={'type': 'log'},
 						paper_bgcolor=colors_palette["background_grey"],
 						plot_bgcolor=colors_palette["background_grey"],
-						title=title_name)}
+						title=title_name_death)}
 
 
 
